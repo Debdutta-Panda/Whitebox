@@ -2,5 +2,9 @@ package com.vxplore.whitebox
 
 enum class Tool {
     MOVE,
-    PEN
+    PEN,
+    ERASER,
+    CLEAN,
+    HIGHLIGHTER,
+    HORIZONTAL_LINE
 }
