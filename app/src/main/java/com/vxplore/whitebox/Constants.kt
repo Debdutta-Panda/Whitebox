@@ -7,6 +7,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.vector.ImageVector
 
 object Constants {
+    private const val lineIconPathData = "M21.71,3.29a1,1 0,0 0,-1.42 0l-18,18a1,1 0,0 0,0 1.42,1 1,0 0,0 1.42,0l18,-18A1,1 0,0 0,21.71 3.29Z"
+    private const val verticalLineIconPathData = "M8,0h1v16h-1v-16z"
     private const val horizontalLineIconPathData = "M0,7h16v1h-16v-1z"
     val highlighterBlendMode: BlendMode = BlendMode.Multiply
     val eraserBlendMode: BlendMode = BlendMode.Clear
@@ -61,9 +63,25 @@ object Constants {
 
     val horizontalLineIcon = createImageVector(
         horizontalLineIconPathData,
-        (toolIconSize*2).toInt(),
-        (toolIconSize*2).toInt(),
-        32f,
-        32f
+        toolIconSize,
+        toolIconSize,
+        16f,
+        16f
+    )
+    val verticalLineIcon = createImageVector(
+        verticalLineIconPathData,
+        toolIconSize,
+        toolIconSize,
+        16f,
+        16f
+    )
+
+
+    val lineIcon = createImageVector(
+        lineIconPathData,
+        toolIconSize,
+        toolIconSize,
+        24f,
+        24f
     )
 }

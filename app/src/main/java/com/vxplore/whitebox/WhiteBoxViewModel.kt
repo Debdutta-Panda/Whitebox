@@ -46,12 +46,28 @@ class WhiteBoxViewModel: ViewModel() {
             Tool.CLEAN -> {}
             Tool.HIGHLIGHTER -> handleHighlighterDrag(dragAmount)
             Tool.HORIZONTAL_LINE -> handleHLineDrag(dragAmount)
+            Tool.VERTICAL_LINE -> handleVerticalDrag(dragAmount)
+            Tool.LINE -> handleLineDrag(dragAmount)
         }
+    }
+
+    private fun handleLineDrag(dragAmount: Offset) {
+        var line = paths.last().lineData
+        line = Pair(line.first,line.second+dragAmount)
+        paths.last().lineData = line
+        pathUpdated.value = System.currentTimeMillis()
+    }
+
+    private fun handleVerticalDrag(dragAmount: Offset) {
+        var line = paths.last().lineData
+        line = Pair(line.first,Offset(line.second.x,line.second.y+dragAmount.y))
+        paths.last().lineData = line
+        pathUpdated.value = System.currentTimeMillis()
     }
 
     private fun handleHLineDrag(dragAmount: Offset) {
         var line = paths.last().lineData
-        line = Pair(line.first,line.second+dragAmount)
+        line = Pair(line.first,Offset(line.second.x+dragAmount.x,line.second.y))
         paths.last().lineData = line
         pathUpdated.value = System.currentTimeMillis()
     }
@@ -98,7 +114,33 @@ class WhiteBoxViewModel: ViewModel() {
             Tool.CLEAN -> {}
             Tool.HIGHLIGHTER -> handleHighlighterDragStart(offset)
             Tool.HORIZONTAL_LINE -> handleHLineDragStart(offset)
+            Tool.VERTICAL_LINE -> handleVerticalDragStart(offset)
+            Tool.LINE -> handleLineDragStart(offset)
         }
+    }
+
+    private fun handleLineDragStart(offset: Offset) {
+        val path = DrawingPath(
+            strokeColor = color.value,
+            strokeWidth = stroke.value,
+            colorFilter = null,
+            blendMode = Constants.penBlendMode,
+            type = ShapeType.LINE
+        )
+        path.lineData = Pair(offset-canvasOffset.value,offset-canvasOffset.value)
+        paths.add(path)
+    }
+
+    private fun handleVerticalDragStart(offset: Offset) {
+        val path = DrawingPath(
+            strokeColor = color.value,
+            strokeWidth = stroke.value,
+            colorFilter = null,
+            blendMode = Constants.penBlendMode,
+            type = ShapeType.LINE
+        )
+        path.lineData = Pair(offset-canvasOffset.value,offset-canvasOffset.value)
+        paths.add(path)
     }
 
     private fun handleHLineDragStart(offset: Offset) {

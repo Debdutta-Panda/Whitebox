@@ -6,5 +6,7 @@ enum class Tool {
     ERASER,
     CLEAN,
     HIGHLIGHTER,
-    HORIZONTAL_LINE
+    HORIZONTAL_LINE,
+    VERTICAL_LINE,
+    LINE
 }

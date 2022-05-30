@@ -3,6 +3,11 @@
   <component name="issues">
     <option name="index">
       <map>
+        <entry key="/Dummy.txt">
+          <value>
+            <set />
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/../Jetpack-Compose-Tutorials/Tutorial1-1Basics/src/main/java/com/smarttoolfactory/tutorial1_1basics/chapter6_graphics/Tutorial6_4_1DrawWithTouch.kt">
           <value>
             <set />
@@ -119,6 +124,11 @@
           </value>
         </entry>
         <entry key="$PROJECT_DIR$/app/src/main/res/drawable/ic_line_h_svgrepo_com.xml">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/res/drawable/ic_line_v_svgrepo_com.xml">
           <value>
             <set />
           </value>

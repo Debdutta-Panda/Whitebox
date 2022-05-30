@@ -69,6 +69,8 @@ fun getIcon(tool: Tool): ImageVector {
         Tool.CLEAN -> Icons.Default.CleaningServices
         Tool.HIGHLIGHTER -> Constants.highlighterIcon
         Tool.HORIZONTAL_LINE -> Constants.horizontalLineIcon
+        Tool.VERTICAL_LINE -> Constants.verticalLineIcon
+        Tool.LINE -> Constants.lineIcon
     }
 }
 
