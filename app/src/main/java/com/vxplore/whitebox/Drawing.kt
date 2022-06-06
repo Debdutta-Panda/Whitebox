@@ -7,6 +7,15 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 
+private val CapType.strokeType: StrokeCap
+    get() {
+        return when(this){
+            CapType.ROUND -> StrokeCap.Round
+            CapType.BUTT -> StrokeCap.Butt
+            CapType.SQUARE -> StrokeCap.Square
+        }
+    }
+
 fun DrawScope.Drawing(vm: WhiteBoxViewModel) {
     with(drawContext.canvas.nativeCanvas) {
         val checkPoint = saveLayer(null, null)
@@ -34,8 +43,8 @@ fun DrawScope.drawLine(vm: WhiteBoxViewModel, path: DrawingPath){
             colorFilter = path.colorFilter,
             blendMode = path.blendMode,
             strokeWidth = path.strokeWidth,
-            cap = StrokeCap.Round,
-            pathEffect = path.pathEffect
+            cap = path.cap.strokeType,
+            pathEffect = path.pathEffect,
         )
     }
 }
@@ -46,7 +55,7 @@ fun DrawScope.drawPath(vm: WhiteBoxViewModel, path: DrawingPath) {
         color = path.strokeColor,
         style = Stroke(
             width = path.strokeWidth,
-            cap = StrokeCap.Round,
+            cap = path.cap.strokeType,
             join = StrokeJoin.Round,
             pathEffect = path.pathEffect
         ),

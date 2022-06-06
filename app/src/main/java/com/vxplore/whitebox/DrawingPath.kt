@@ -15,6 +15,14 @@ enum class ShapeType{
     OVAL
 }
 
+data class ArrowHead(
+    val center: Offset,
+    val target1: Offset,
+    val target2: Offset,
+    val rotation1: Float,
+    val rotation2: Float
+)
+
 data class DrawingPath(
     var strokeColor: Color = Color.Black,
     var strokeWidth: Float = 1f,
@@ -24,5 +32,8 @@ data class DrawingPath(
     var blendMode: BlendMode = DrawScope.DefaultBlendMode,
     var type: ShapeType = ShapeType.PATH,
     var lineData: Pair<Offset,Offset> = Pair(Offset.Zero,Offset.Zero),
-    var pathEffect: PathEffect? = null
+    var pathEffect: PathEffect? = null,
+    var cap: CapType = CapType.ROUND,
+    var frontArrowHead: ArrowHead? = null,
+    var backArrowHead: ArrowHead? = null,
 )

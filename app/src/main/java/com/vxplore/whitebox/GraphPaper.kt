@@ -23,7 +23,7 @@ fun DrawScope.GraphPaper(vm: WhiteBoxViewModel) {
                 start = Offset(x = gridX+offsetX % xGridGap, y = 0f),
                 end = Offset(x = gridX+offsetX % xGridGap, y = canvasHeight),
                 color = vm.yGridColor.value,
-                strokeWidth = vm.yGridStroke.value
+                strokeWidth = vm.yGridStroke.value,
             )
             gridX += xGridGap
         }

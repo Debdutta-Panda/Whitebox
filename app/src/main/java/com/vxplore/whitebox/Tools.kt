@@ -1,15 +1,14 @@
 package com.vxplore.whitebox
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Gesture
 import androidx.compose.material.icons.filled.PanTool
@@ -24,10 +23,83 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun BoxScope.ToolBox(vm: WhiteBoxViewModel) {
-    LazyColumn(
+    Column(
         modifier = Modifier
             .fillMaxHeight()
-            .width(40.dp)
+            .width(Constants.toolSectionsWidth.dp)
+    ) {
+        ToolsSection(vm)
+        Divider(
+            color = Constants.toolsSectionsDividerColor
+        )
+        ToolsSettingsSection(vm)
+    }
+
+}
+
+@Composable
+fun ColumnScope.ToolsSettingsSection(vm: WhiteBoxViewModel) {
+    LazyColumn(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxSize()
+    ){
+        item{
+            IconButton(onClick = {
+                vm.switchLineType()
+            }) {
+                Icon(
+                    imageVector = getLineTypeIcon(vm),
+                    contentDescription = "Line Type ${vm.lineType.value.name}",
+                    tint = Color(Constants.selectedToolColor),
+                    modifier = Modifier.size(Constants.toolIconSize.dp)
+                )
+            }
+        }
+        item{
+            IconButton(onClick = {
+                vm.switchCapType()
+            }) {
+                Image(
+                    painter = when(vm.capType.value){
+                        CapType.ROUND -> painterResource(id = R.drawable.ic_cap_round)
+                        CapType.BUTT -> painterResource(id = R.drawable.ic_cap_square)
+                        CapType.SQUARE -> painterResource(id = R.drawable.ic_cap_butt)
+                    },
+                    contentDescription = "Line Type ${vm.lineType.value.name}",
+                    modifier = Modifier.size(Constants.toolIconSize.dp)
+                )
+            }
+        }
+        item{
+            IconButton(onClick = {
+                vm.toggleEndArrowHead()
+            }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowForward,
+                    contentDescription = "Forward Arrow Head",
+                    tint = Color(if(vm.forwardArrowHead.value) Constants.selectedToolColor else Constants.toolColor),
+                    modifier = Modifier.size(Constants.toolIconSize.dp)
+                )
+            }
+        }
+    }
+}
+
+
+fun getLineTypeIcon(vm: WhiteBoxViewModel): ImageVector {
+    return when(vm.lineType.value){
+        LineType.DASHED -> Constants.dashedLineIcon
+        LineType.CONTINUOUS -> Constants.horizontalLineIcon
+    }
+}
+
+@Composable
+fun ColumnScope.ToolsSection(vm: WhiteBoxViewModel) {
+    LazyColumn(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxSize()
     ){
         item{
             IconButton(onClick = {

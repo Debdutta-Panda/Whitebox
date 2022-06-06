@@ -7,6 +7,12 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.vector.ImageVector
 
 object Constants {
+    val capType = CapType.ROUND
+    const val dashedPhase = 20f
+    val dashedIntervals = floatArrayOf(20f, 20f)
+    private const val dashedLineIconPathData = "M0,8h4v1h-4v-1zM6.5,9h4v-1h-4v1zM13,8v1h4v-1h-4z"
+    const val toolSectionsWidth = 40
+    val toolsSectionsDividerColor = Color.DarkGray
     private const val lineIconPathData = "M21.71,3.29a1,1 0,0 0,-1.42 0l-18,18a1,1 0,0 0,0 1.42,1 1,0 0,0 1.42,0l18,-18A1,1 0,0 0,21.71 3.29Z"
     private const val verticalLineIconPathData = "M8,0h1v16h-1v-16z"
     private const val horizontalLineIconPathData = "M0,7h16v1h-16v-1z"
@@ -83,5 +89,13 @@ object Constants {
         toolIconSize,
         24f,
         24f
+    )
+
+    val dashedLineIcon = createImageVector(
+        dashedLineIconPathData,
+        toolIconSize,
+        toolIconSize,
+        17f,
+        17f
     )
 }
