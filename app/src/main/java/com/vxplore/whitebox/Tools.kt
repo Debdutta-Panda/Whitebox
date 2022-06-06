@@ -8,10 +8,8 @@ import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.CleaningServices
-import androidx.compose.material.icons.filled.Gesture
-import androidx.compose.material.icons.filled.PanTool
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.CheckBoxOutlineBlank
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -73,12 +71,24 @@ fun ColumnScope.ToolsSettingsSection(vm: WhiteBoxViewModel) {
         }
         item{
             IconButton(onClick = {
-                vm.toggleEndArrowHead()
+                vm.toggleForwardArrowHead()
             }) {
                 Icon(
                     imageVector = Icons.Default.ArrowForward,
                     contentDescription = "Forward Arrow Head",
                     tint = Color(if(vm.forwardArrowHead.value) Constants.selectedToolColor else Constants.toolColor),
+                    modifier = Modifier.size(Constants.toolIconSize.dp)
+                )
+            }
+        }
+        item{
+            IconButton(onClick = {
+                vm.toggleBackwardArrowHead()
+            }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Forward Arrow Head",
+                    tint = Color(if(vm.backwardArrowHead.value) Constants.selectedToolColor else Constants.toolColor),
                     modifier = Modifier.size(Constants.toolIconSize.dp)
                 )
             }
@@ -143,6 +153,7 @@ fun getIcon(tool: Tool): ImageVector {
         Tool.HORIZONTAL_LINE -> Constants.horizontalLineIcon
         Tool.VERTICAL_LINE -> Constants.verticalLineIcon
         Tool.LINE -> Constants.lineIcon
+        Tool.RECTANGLE -> Icons.Outlined.CheckBoxOutlineBlank
     }
 }
 

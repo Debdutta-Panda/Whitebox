@@ -17,19 +17,19 @@ fun WhiteBox(vm: WhiteBoxViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDragStart = {
-                            vm.dragStart(it)
-                        },
-                        onDragEnd = {
-                            vm.dragEnd()
-                        },
-                        onDragCancel = {
-                            vm.dragCancel()
+                        detectDragGestures(
+                            onDragStart = {
+                                vm.dragStart(it)
+                            },
+                            onDragEnd = {
+                                vm.dragEnd()
+                            },
+                            onDragCancel = {
+                                vm.dragCancel()
+                            }
+                        ) { change, dragAmount ->
+                            vm.drag(dragAmount)
                         }
-                    ) { change, dragAmount ->
-                        vm.drag(dragAmount)
-                    }
                 }
         ){
             GraphPaper(vm)

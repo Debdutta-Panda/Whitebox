@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.vector.ImageVector
 
 object Constants {
+    val arrowDistance = 40f
     val capType = CapType.ROUND
     const val dashedPhase = 20f
     val dashedIntervals = floatArrayOf(20f, 20f)

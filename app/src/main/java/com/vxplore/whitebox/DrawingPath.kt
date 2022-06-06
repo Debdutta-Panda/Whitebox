@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.DrawStyle
 
 enum class ShapeType{
     PATH,
@@ -17,10 +18,7 @@ enum class ShapeType{
 
 data class ArrowHead(
     val center: Offset,
-    val target1: Offset,
-    val target2: Offset,
-    val rotation1: Float,
-    val rotation2: Float
+    val target: Offset,
 )
 
 data class DrawingPath(
@@ -34,6 +32,7 @@ data class DrawingPath(
     var lineData: Pair<Offset,Offset> = Pair(Offset.Zero,Offset.Zero),
     var pathEffect: PathEffect? = null,
     var cap: CapType = CapType.ROUND,
-    var frontArrowHead: ArrowHead? = null,
+    var forwardArrowHead: ArrowHead? = null,
     var backArrowHead: ArrowHead? = null,
+    val drawStyle: DrawStyle? = null
 )

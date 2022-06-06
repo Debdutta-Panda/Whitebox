@@ -8,5 +8,6 @@ enum class Tool {
     HIGHLIGHTER,
     HORIZONTAL_LINE,
     VERTICAL_LINE,
-    LINE
+    LINE,
+    RECTANGLE
 }
