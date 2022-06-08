@@ -2,7 +2,6 @@ package com.vxplore.whitebox
 
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.*
 import androidx.compose.ui.graphics.nativeCanvas
 
@@ -44,7 +43,7 @@ fun DrawScope.drawRectangle(vm: WhiteBoxViewModel, path: DrawingPath) {
     if(vm.pathUpdated.value>0L){
         val gap = path.lineData.second - path.lineData.first
         drawRect(
-            color = path.strokeColor,
+            color = if(path.drawStyle==Fill) path.fillColor else path.strokeColor,
             topLeft = path.lineData.first+vm.canvasOffset.value,
             size = Size(gap.x,gap.y),
             colorFilter = path.colorFilter,
@@ -76,12 +75,7 @@ fun DrawScope.drawPath(vm: WhiteBoxViewModel, path: DrawingPath) {
     drawPath(
         createNewPath(vm,path),
         color = path.strokeColor,
-        style = Stroke(
-            width = path.strokeWidth,
-            cap = path.cap.strokeType,
-            join = StrokeJoin.Round,
-            pathEffect = path.pathEffect
-        ),
+        style = path.drawStyle?:Fill,
         alpha = path.alpha,
         colorFilter = path.colorFilter,
         blendMode = path.blendMode

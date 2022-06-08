@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawStyle
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.lifecycle.ViewModel
 
@@ -20,6 +21,8 @@ val StrokeJoinType.stokeJoin: StrokeJoin
     }
 
 class WhiteBoxViewModel: ViewModel() {
+    val fillColor = mutableStateOf(Color.Black)
+    val sheetColor = mutableStateOf(Color.White)
     val eraserIndicatorAlpha = mutableStateOf(1f)
     val eraserIndicatorColor = mutableStateOf(Color.LightGray)
     val eraserPos = mutableStateOf(Offset.Zero)
@@ -265,23 +268,25 @@ class WhiteBoxViewModel: ViewModel() {
             type = ShapeType.RECTANGLE,
             pathEffect = currentPathEffect,
             cap = capType.value,
-            drawStyle = getDrawStyle()
+            drawStyle = getDrawStyle(),
+            fillColor = fillColor.value
         )
         path.lineData = Pair(offset-canvasOffset.value,offset-canvasOffset.value)
         paths.add(path)
     }
 
-    private fun getDrawStyle(): DrawStyle? {
-        if(drawStyleType.value==DrawStyleType.STROKE){
-            return Stroke(
+    private fun getDrawStyle(): DrawStyle {
+        return if(drawStyleType.value==DrawStyleType.STROKE){
+            Stroke(
                 width = stroke.value,
                 miter = miter.value,
                 cap = capType.value.strokeType,
                 join = join.value.stokeJoin,
                 pathEffect = currentPathEffect
             )
+        } else{
+            Fill
         }
-        return null
     }
 
     private fun handleLineDragStart(offset: Offset) {
@@ -349,6 +354,7 @@ class WhiteBoxViewModel: ViewModel() {
             pathEffect = currentPathEffect,
             cap = capType.value
         )
+        eraserPos.value = offset-canvasOffset.value
         path.points.add(offset-canvasOffset.value)
         paths.add(path)
     }
@@ -365,7 +371,8 @@ class WhiteBoxViewModel: ViewModel() {
             colorFilter = colorFilter.value,
             blendMode = blendMode.value,
             pathEffect = currentPathEffect,
-            cap = capType.value
+            cap = capType.value,
+            drawStyle = getDrawStyle(),
         )
         path.points.add(offset-canvasOffset.value)
         paths.add(path)
@@ -401,6 +408,14 @@ class WhiteBoxViewModel: ViewModel() {
 
     fun toggleBackwardArrowHead() {
         backwardArrowHead.toggle()
+    }
+
+    fun setFillColor(it: Color) {
+        fillColor.value = it
+    }
+
+    fun setDrawStyleType(type: DrawStyleType) {
+        drawStyleType.value = type
     }
 }
 

@@ -49,6 +49,7 @@ object Constants {
         Color.Gray,
         Color.Magenta,
         Color.Yellow,
+        Color.Transparent,
     )
 
 

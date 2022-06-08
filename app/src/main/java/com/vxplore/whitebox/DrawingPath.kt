@@ -34,5 +34,6 @@ data class DrawingPath(
     var cap: CapType = CapType.ROUND,
     var forwardArrowHead: ArrowHead? = null,
     var backArrowHead: ArrowHead? = null,
-    val drawStyle: DrawStyle? = null
+    val drawStyle: DrawStyle? = null,
+    val fillColor: Color = Color.Black
 )

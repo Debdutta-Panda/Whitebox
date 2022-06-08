@@ -1,6 +1,5 @@
 package com.vxplore.whitebox
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyRow
@@ -16,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun StrokeColorBox(vm: WhiteBoxViewModel) {
+fun FillColorBox(vm: WhiteBoxViewModel) {
     LazyRow(
         modifier = Modifier
             .fillMaxWidth()
@@ -25,22 +24,17 @@ fun StrokeColorBox(vm: WhiteBoxViewModel) {
         items(Constants.colors){
             Button(
                 onClick = {
-                    vm.setColor(it)
+                    vm.setFillColor(it)
                 },
                 colors = ButtonDefaults.buttonColors(
-                    backgroundColor = Color.White
-                ),
-                modifier = Modifier
-                    .border(
-                        width = 4.dp,
-                        color = it
-                    )
+                    backgroundColor = it
+                )
             ) {
-                if(vm.color.value==it){
+                if(vm.fillColor.value==it){
                     Icon(
                         imageVector = Icons.Default.Circle,
                         contentDescription ="Selected",
-                        tint = it
+                        tint = Color.White
                     )
                 }
             }

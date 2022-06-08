@@ -8,7 +8,17 @@
             <set />
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/../BottomSheetComposeExample/app/src/main/java/com/example/bottomsheetcomposeexample/MainActivity.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/../Jetpack-Compose-Tutorials/Tutorial1-1Basics/src/main/java/com/smarttoolfactory/tutorial1_1basics/chapter6_graphics/Tutorial6_4_1DrawWithTouch.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/vxplore/whitebox/BottomSheetContent.kt">
           <value>
             <set />
           </value>
@@ -28,6 +38,11 @@
             <set />
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/vxplore/whitebox/DrawStyleBox.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/app/src/main/java/com/vxplore/whitebox/DrawStyleType.kt">
           <value>
             <set />
@@ -39,6 +54,11 @@
           </value>
         </entry>
         <entry key="$PROJECT_DIR$/app/src/main/java/com/vxplore/whitebox/DrawingPath.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/vxplore/whitebox/FillColorBox.kt">
           <value>
             <set />
           </value>
@@ -59,6 +79,11 @@
           </value>
         </entry>
         <entry key="$PROJECT_DIR$/app/src/main/java/com/vxplore/whitebox/MainActivity.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/vxplore/whitebox/MainScreenContent.kt">
           <value>
             <set />
           </value>
