@@ -9,5 +9,7 @@ enum class Tool {
     HORIZONTAL_LINE,
     VERTICAL_LINE,
     LINE,
-    RECTANGLE
+    RECTANGLE,
+    OVAL,
+    CIRCLE
 }

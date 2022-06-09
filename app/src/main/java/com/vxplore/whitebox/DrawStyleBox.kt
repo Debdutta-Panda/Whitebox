@@ -33,5 +33,13 @@ fun DrawStyleBox(vm: WhiteBoxViewModel) {
                 vm.setDrawStyleType(DrawStyleType.FILL)
             }
         )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text("Both")
+        RadioButton(
+            selected = vm.drawStyleType.value==DrawStyleType.BOTH,
+            onClick = {
+                vm.setDrawStyleType(DrawStyleType.BOTH)
+            }
+        )
     }
 }

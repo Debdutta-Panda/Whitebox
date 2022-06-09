@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.vxplore.whitebox.Tool.*
 
 @Composable
 fun BoxScope.ToolBox(vm: WhiteBoxViewModel) {
@@ -128,7 +129,7 @@ fun ColumnScope.ToolsSection(vm: WhiteBoxViewModel) {
 
             }
         }
-        items(Tool.values()) {
+        items(values()) {
             IconButton(onClick = {
                 vm.setTool(it)
             }) {
@@ -145,15 +146,17 @@ fun ColumnScope.ToolsSection(vm: WhiteBoxViewModel) {
 
 fun getIcon(tool: Tool): ImageVector {
     return when(tool){
-        Tool.MOVE -> Icons.Default.PanTool
-        Tool.PEN -> Icons.Default.Gesture
-        Tool.ERASER -> Constants.eraserIcon
-        Tool.CLEAN -> Icons.Default.CleaningServices
-        Tool.HIGHLIGHTER -> Constants.highlighterIcon
-        Tool.HORIZONTAL_LINE -> Constants.horizontalLineIcon
-        Tool.VERTICAL_LINE -> Constants.verticalLineIcon
-        Tool.LINE -> Constants.lineIcon
-        Tool.RECTANGLE -> Icons.Outlined.CheckBoxOutlineBlank
+        MOVE -> Icons.Default.PanTool
+        PEN -> Icons.Default.Gesture
+        ERASER -> Constants.eraserIcon
+        CLEAN -> Icons.Default.CleaningServices
+        HIGHLIGHTER -> Constants.highlighterIcon
+        HORIZONTAL_LINE -> Constants.horizontalLineIcon
+        VERTICAL_LINE -> Constants.verticalLineIcon
+        LINE -> Constants.lineIcon
+        RECTANGLE -> Icons.Outlined.CheckBoxOutlineBlank
+        OVAL -> Constants.ovalIcon
+        CIRCLE -> Constants.circleIcon
     }
 }
 

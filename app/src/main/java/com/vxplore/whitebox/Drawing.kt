@@ -8,20 +8,122 @@ import androidx.compose.ui.graphics.nativeCanvas
 
 
 fun DrawScope.Drawing(vm: WhiteBoxViewModel) {
-    with(drawContext.canvas.nativeCanvas) {
-        val checkPoint = saveLayer(null, null)
-        vm.paths.forEach {
-            when(it.type){
-                ShapeType.PATH -> drawPath(vm,it)
-                ShapeType.LINE -> drawLine(vm,it)
-                ShapeType.LINE_SEGMENT -> TODO()
-                ShapeType.RECTANGLE -> drawRectangle(vm,it)
-                ShapeType.OVAL -> TODO()
+    if(vm.pathUpdated.value>0L){
+        with(drawContext.canvas.nativeCanvas) {
+            val checkPoint = saveLayer(null, null)
+            vm.paths.forEach {
+                when(it.type){
+                    ShapeType.PATH -> drawPath(vm,it)
+                    ShapeType.LINE -> drawLine(vm,it)
+                    ShapeType.LINE_SEGMENT -> TODO()
+                    ShapeType.RECTANGLE -> drawRectangle(vm,it)
+                    ShapeType.OVAL -> drawOval(vm,it)
+                    ShapeType.CIRCLE -> drawCircle(vm,it)
+                }
             }
+            drawEraser(vm)
+            restoreToCount(checkPoint)
         }
-        drawEraser(vm)
-        restoreToCount(checkPoint)
     }
+}
+
+fun DrawScope.drawCircle(vm: WhiteBoxViewModel, path: DrawingPath) {
+    val gap = path.twoPointData.second - path.twoPointData.first
+    when(path.drawStyleType){
+        DrawStyleType.STROKE -> {
+            drawCircle(
+                color = path.strokeColor,
+                center = path.twoPointData.first,
+                radius = distance(path.twoPointData.first,path.twoPointData.second),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = path.drawStyle?:Fill
+            )
+        }
+        DrawStyleType.FILL -> {
+            drawCircle(
+                color = path.fillColor,
+                center = path.twoPointData.first,
+                radius = distance(path.twoPointData.first,path.twoPointData.second),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = Fill
+            )
+        }
+        DrawStyleType.BOTH -> {
+            drawCircle(
+                color = path.fillColor,
+                center = path.twoPointData.first,
+                radius = distance(path.twoPointData.first,path.twoPointData.second),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = Fill
+            )
+            drawCircle(
+                color = path.strokeColor,
+                center = path.twoPointData.first,
+                radius = distance(path.twoPointData.first,path.twoPointData.second),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = path.drawStyle?:Fill
+            )
+        }
+    }
+}
+
+fun DrawScope.drawOval(vm: WhiteBoxViewModel, path: DrawingPath) {
+    val gap = path.twoPointData.second - path.twoPointData.first
+    when(path.drawStyleType){
+        DrawStyleType.STROKE -> {
+            drawOval(
+                color = path.strokeColor,
+                topLeft = path.twoPointData.first+vm.canvasOffset.value,
+                size = Size(gap.x,gap.y),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = path.drawStyle?:Fill
+            )
+        }
+        DrawStyleType.FILL -> {
+            drawOval(
+                color = path.fillColor,
+                topLeft = path.twoPointData.first+vm.canvasOffset.value,
+                size = Size(gap.x,gap.y),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = Fill
+            )
+        }
+        DrawStyleType.BOTH -> {
+            drawOval(
+                color = path.fillColor,
+                topLeft = path.twoPointData.first+vm.canvasOffset.value,
+                size = Size(gap.x,gap.y),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = Fill
+            )
+            drawOval(
+                color = path.strokeColor,
+                topLeft = path.twoPointData.first+vm.canvasOffset.value,
+                size = Size(gap.x,gap.y),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = path.drawStyle?:Fill
+            )
+        }
+    }
+}
+
+fun applyEraser(vm: WhiteBoxViewModel, it: DrawingPath) {
 
 }
 
@@ -40,46 +142,109 @@ fun DrawScope.drawEraser(vm: WhiteBoxViewModel) {
 }
 
 fun DrawScope.drawRectangle(vm: WhiteBoxViewModel, path: DrawingPath) {
-    if(vm.pathUpdated.value>0L){
-        val gap = path.lineData.second - path.lineData.first
-        drawRect(
-            color = if(path.drawStyle==Fill) path.fillColor else path.strokeColor,
-            topLeft = path.lineData.first+vm.canvasOffset.value,
-            size = Size(gap.x,gap.y),
-            colorFilter = path.colorFilter,
-            blendMode = path.blendMode,
-            alpha = path.alpha,
-            style = path.drawStyle?:Fill
-        )
+    val gap = path.twoPointData.second - path.twoPointData.first
+    when(path.drawStyleType){
+        DrawStyleType.STROKE -> {
+            drawRect(
+                color = path.strokeColor,
+                topLeft = path.twoPointData.first+vm.canvasOffset.value,
+                size = Size(gap.x,gap.y),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = path.drawStyle?:Fill
+            )
+        }
+        DrawStyleType.FILL -> {
+            drawRect(
+                color = path.fillColor,
+                topLeft = path.twoPointData.first+vm.canvasOffset.value,
+                size = Size(gap.x,gap.y),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = Fill
+            )
+        }
+        DrawStyleType.BOTH -> {
+            drawRect(
+                color = path.fillColor,
+                topLeft = path.twoPointData.first+vm.canvasOffset.value,
+                size = Size(gap.x,gap.y),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = Fill
+            )
+            drawRect(
+                color = path.strokeColor,
+                topLeft = path.twoPointData.first+vm.canvasOffset.value,
+                size = Size(gap.x,gap.y),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = path.drawStyle?:Fill
+            )
+        }
     }
 }
 
 fun DrawScope.drawLine(vm: WhiteBoxViewModel, path: DrawingPath){
-    if(vm.pathUpdated.value>0L){
-        drawLine(
-            start = path.lineData.first+vm.canvasOffset.value,
-            end = path.lineData.second+vm.canvasOffset.value,
-            color = path.strokeColor,
-            alpha = path.alpha,
-            colorFilter = path.colorFilter,
-            blendMode = path.blendMode,
-            strokeWidth = path.strokeWidth,
-            cap = path.cap.strokeType,
-            pathEffect = path.pathEffect,
-        )
-        drawArrow(path,vm)
-    }
+    drawLine(
+        start = path.twoPointData.first+vm.canvasOffset.value,
+        end = path.twoPointData.second+vm.canvasOffset.value,
+        color = path.strokeColor,
+        alpha = path.alpha,
+        colorFilter = path.colorFilter,
+        blendMode = path.blendMode,
+        strokeWidth = path.strokeWidth,
+        cap = path.cap.strokeType,
+        pathEffect = path.pathEffect,
+    )
+    drawArrow(path,vm)
 }
 
 fun DrawScope.drawPath(vm: WhiteBoxViewModel, path: DrawingPath) {
-    drawPath(
-        createNewPath(vm,path),
-        color = path.strokeColor,
-        style = path.drawStyle?:Fill,
-        alpha = path.alpha,
-        colorFilter = path.colorFilter,
-        blendMode = path.blendMode
-    )
+    when(path.drawStyleType){
+        DrawStyleType.BOTH->{
+            drawPath(
+                createNewPath(vm,path),
+                color = path.fillColor,
+                style = Fill,
+                alpha = path.alpha,
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode
+            )
+            drawPath(
+                createNewPath(vm,path),
+                color = path.strokeColor,
+                style = path.drawStyle?:Fill,
+                alpha = path.alpha,
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode
+            )
+        }
+        DrawStyleType.STROKE->{
+            drawPath(
+                createNewPath(vm,path),
+                color = path.strokeColor,
+                style = path.drawStyle?:Fill,
+                alpha = path.alpha,
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode
+            )
+        }
+        DrawStyleType.FILL->{
+            drawPath(
+                createNewPath(vm,path),
+                color = path.fillColor,
+                style = Fill,
+                alpha = path.alpha,
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode
+            )
+        }
+    }
     drawArrow(path,vm)
 }
 

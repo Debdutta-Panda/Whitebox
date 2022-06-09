@@ -13,7 +13,8 @@ enum class ShapeType{
     LINE,
     LINE_SEGMENT,
     RECTANGLE,
-    OVAL
+    OVAL,
+    CIRCLE
 }
 
 data class ArrowHead(
@@ -29,11 +30,12 @@ data class DrawingPath(
     var colorFilter: ColorFilter? = null,
     var blendMode: BlendMode = DrawScope.DefaultBlendMode,
     var type: ShapeType = ShapeType.PATH,
-    var lineData: Pair<Offset,Offset> = Pair(Offset.Zero,Offset.Zero),
+    var twoPointData: Pair<Offset,Offset> = Pair(Offset.Zero,Offset.Zero),
     var pathEffect: PathEffect? = null,
     var cap: CapType = CapType.ROUND,
     var forwardArrowHead: ArrowHead? = null,
     var backArrowHead: ArrowHead? = null,
     val drawStyle: DrawStyle? = null,
-    val fillColor: Color = Color.Black
+    val fillColor: Color = Color.Black,
+    val drawStyleType:DrawStyleType = DrawStyleType.STROKE
 )

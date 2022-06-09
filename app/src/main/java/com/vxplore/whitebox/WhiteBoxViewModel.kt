@@ -21,6 +21,8 @@ val StrokeJoinType.stokeJoin: StrokeJoin
     }
 
 class WhiteBoxViewModel: ViewModel() {
+    val fillAlpha = mutableStateOf(1f)
+    val strokeAlpha = mutableStateOf(1f)
     val fillColor = mutableStateOf(Color.Black)
     val sheetColor = mutableStateOf(Color.White)
     val eraserIndicatorAlpha = mutableStateOf(1f)
@@ -64,7 +66,7 @@ class WhiteBoxViewModel: ViewModel() {
     val xGridColor = mutableStateOf(Color(Constants.xGridColor))
     //////////////////////////////
     val tool = mutableStateOf(Tool.MOVE)
-    val color = mutableStateOf(Color.Black)
+    val strokeColor = mutableStateOf(Color.Black)
     val stroke = mutableStateOf(Constants.strokeWidth)
     val pathUpdated = mutableStateOf(0L)
 
@@ -86,23 +88,39 @@ class WhiteBoxViewModel: ViewModel() {
                 Tool.HORIZONTAL_LINE -> handleHLineDrag(dragAmount)
                 Tool.VERTICAL_LINE -> handleVerticalDrag(dragAmount)
                 Tool.LINE -> handleLineDrag(dragAmount)
-                Tool.RECTANGLE -> handleDragRactangle(dragAmount)
+                Tool.RECTANGLE -> handleDragRectangle(dragAmount)
+                Tool.OVAL -> handleDragOval(dragAmount)
+                Tool.CIRCLE -> handleDragCircle(dragAmount)
             }
         } catch (e: Exception) {
         }
     }
 
-    private fun handleDragRactangle(dragAmount: Offset) {
-        var line = paths.last().lineData
+    private fun handleDragCircle(dragAmount: Offset) {
+        var line = paths.last().twoPointData
         line = Pair(line.first,line.second+dragAmount)
-        paths.last().lineData = line
+        paths.last().twoPointData = line
+        pathUpdated.value = System.currentTimeMillis()
+    }
+
+    private fun handleDragOval(dragAmount: Offset) {
+        var line = paths.last().twoPointData
+        line = Pair(line.first,line.second+dragAmount)
+        paths.last().twoPointData = line
+        pathUpdated.value = System.currentTimeMillis()
+    }
+
+    private fun handleDragRectangle(dragAmount: Offset) {
+        var line = paths.last().twoPointData
+        line = Pair(line.first,line.second+dragAmount)
+        paths.last().twoPointData = line
         pathUpdated.value = System.currentTimeMillis()
     }
 
     private fun handleLineDrag(dragAmount: Offset) {
-        var line = paths.last().lineData
+        var line = paths.last().twoPointData
         line = Pair(line.first,line.second+dragAmount)
-        paths.last().lineData = line
+        paths.last().twoPointData = line
         updateArrowHeads()
         pathUpdated.value = System.currentTimeMillis()
     }
@@ -161,7 +179,7 @@ class WhiteBoxViewModel: ViewModel() {
                 }
             }
             ShapeType.LINE -> {
-                return Pair(lastPath.lineData.second,lastPath.lineData.first)
+                return Pair(lastPath.twoPointData.second,lastPath.twoPointData.first)
             }
             ShapeType.LINE_SEGMENT -> TODO()
             ShapeType.RECTANGLE -> TODO()
@@ -184,7 +202,7 @@ class WhiteBoxViewModel: ViewModel() {
                 }
             }
             ShapeType.LINE -> {
-                return Pair(lastPath.lineData.first,lastPath.lineData.second)
+                return Pair(lastPath.twoPointData.first,lastPath.twoPointData.second)
             }
             ShapeType.LINE_SEGMENT -> TODO()
             ShapeType.RECTANGLE -> TODO()
@@ -194,17 +212,17 @@ class WhiteBoxViewModel: ViewModel() {
     }
 
     private fun handleVerticalDrag(dragAmount: Offset) {
-        var line = paths.last().lineData
+        var line = paths.last().twoPointData
         line = Pair(line.first,Offset(line.second.x,line.second.y+dragAmount.y))
-        paths.last().lineData = line
+        paths.last().twoPointData = line
         updateArrowHeads()
         pathUpdated.value = System.currentTimeMillis()
     }
 
     private fun handleHLineDrag(dragAmount: Offset) {
-        var line = paths.last().lineData
+        var line = paths.last().twoPointData
         line = Pair(line.first,Offset(line.second.x+dragAmount.x,line.second.y))
-        paths.last().lineData = line
+        paths.last().twoPointData = line
         updateArrowHeads()
         pathUpdated.value = System.currentTimeMillis()
     }
@@ -256,12 +274,48 @@ class WhiteBoxViewModel: ViewModel() {
             Tool.VERTICAL_LINE -> handleVerticalDragStart(offset)
             Tool.LINE -> handleLineDragStart(offset)
             Tool.RECTANGLE -> handleRectangleDragStart(offset)
+            Tool.OVAL -> handleOvalDragStart(offset)
+            Tool.CIRCLE -> handleCircleDragStart(offset)
         }
+    }
+
+    private fun handleCircleDragStart(offset: Offset) {
+        val path = DrawingPath(
+            strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
+            strokeWidth = stroke.value,
+            colorFilter = null,
+            blendMode = Constants.penBlendMode,
+            type = ShapeType.CIRCLE,
+            pathEffect = currentPathEffect,
+            cap = capType.value,
+            drawStyle = getDrawStyle(),
+            fillColor = fillColor.value.copy(alpha = fillAlpha.value),
+            drawStyleType = drawStyleType.value
+        )
+        path.twoPointData = Pair(offset-canvasOffset.value,offset-canvasOffset.value)
+        paths.add(path)
+    }
+
+    private fun handleOvalDragStart(offset: Offset) {
+        val path = DrawingPath(
+            strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
+            strokeWidth = stroke.value,
+            colorFilter = null,
+            blendMode = Constants.penBlendMode,
+            type = ShapeType.OVAL,
+            pathEffect = currentPathEffect,
+            cap = capType.value,
+            drawStyle = getDrawStyle(),
+            fillColor = fillColor.value.copy(alpha = fillAlpha.value),
+            drawStyleType = drawStyleType.value
+        )
+        path.twoPointData = Pair(offset-canvasOffset.value,offset-canvasOffset.value)
+        paths.add(path)
     }
 
     private fun handleRectangleDragStart(offset: Offset) {
         val path = DrawingPath(
-            strokeColor = color.value,
+            strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
             strokeWidth = stroke.value,
             colorFilter = null,
             blendMode = Constants.penBlendMode,
@@ -269,14 +323,18 @@ class WhiteBoxViewModel: ViewModel() {
             pathEffect = currentPathEffect,
             cap = capType.value,
             drawStyle = getDrawStyle(),
-            fillColor = fillColor.value
+            fillColor = fillColor.value.copy(alpha = fillAlpha.value),
+            drawStyleType = drawStyleType.value
         )
-        path.lineData = Pair(offset-canvasOffset.value,offset-canvasOffset.value)
+        path.twoPointData = Pair(offset-canvasOffset.value,offset-canvasOffset.value)
         paths.add(path)
     }
 
     private fun getDrawStyle(): DrawStyle {
-        return if(drawStyleType.value==DrawStyleType.STROKE){
+        return if(
+            drawStyleType.value==DrawStyleType.STROKE
+            ||drawStyleType.value==DrawStyleType.BOTH
+                ){
             Stroke(
                 width = stroke.value,
                 miter = miter.value,
@@ -291,7 +349,7 @@ class WhiteBoxViewModel: ViewModel() {
 
     private fun handleLineDragStart(offset: Offset) {
         val path = DrawingPath(
-            strokeColor = color.value,
+            strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
             strokeWidth = stroke.value,
             colorFilter = null,
             blendMode = Constants.penBlendMode,
@@ -299,13 +357,13 @@ class WhiteBoxViewModel: ViewModel() {
             pathEffect = currentPathEffect,
             cap = capType.value
         )
-        path.lineData = Pair(offset-canvasOffset.value,offset-canvasOffset.value)
+        path.twoPointData = Pair(offset-canvasOffset.value,offset-canvasOffset.value)
         paths.add(path)
     }
 
     private fun handleVerticalDragStart(offset: Offset) {
         val path = DrawingPath(
-            strokeColor = color.value,
+            strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
             strokeWidth = stroke.value,
             colorFilter = null,
             blendMode = Constants.penBlendMode,
@@ -313,13 +371,13 @@ class WhiteBoxViewModel: ViewModel() {
             pathEffect = currentPathEffect,
             cap = capType.value
         )
-        path.lineData = Pair(offset-canvasOffset.value,offset-canvasOffset.value)
+        path.twoPointData = Pair(offset-canvasOffset.value,offset-canvasOffset.value)
         paths.add(path)
     }
 
     private fun handleHLineDragStart(offset: Offset) {
         val path = DrawingPath(
-            strokeColor = color.value,
+            strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
             strokeWidth = stroke.value,
             colorFilter = null,
             blendMode = Constants.penBlendMode,
@@ -327,13 +385,13 @@ class WhiteBoxViewModel: ViewModel() {
             pathEffect = currentPathEffect,
             cap = capType.value
         )
-        path.lineData = Pair(offset-canvasOffset.value,offset-canvasOffset.value)
+        path.twoPointData = Pair(offset-canvasOffset.value,offset-canvasOffset.value)
         paths.add(path)
     }
 
     private fun handleHighlighterDragStart(offset: Offset) {
         val path = DrawingPath(
-            strokeColor = color.value,
+            strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
             strokeWidth = stroke.value,
             colorFilter = null,
             blendMode = Constants.highlighterBlendMode,
@@ -348,11 +406,14 @@ class WhiteBoxViewModel: ViewModel() {
         showEraser.value = true
         val path = DrawingPath(
             strokeColor = eraserColor.value,
+            fillColor = eraserColor.value,
             strokeWidth = stroke.value,
             colorFilter = null,
             blendMode = Constants.eraserBlendMode,
             pathEffect = currentPathEffect,
-            cap = capType.value
+            cap = capType.value,
+            drawStyle = getDrawStyle(),
+            drawStyleType = drawStyleType.value
         )
         eraserPos.value = offset-canvasOffset.value
         path.points.add(offset-canvasOffset.value)
@@ -365,7 +426,8 @@ class WhiteBoxViewModel: ViewModel() {
 
     private fun handlePenDragStart(offset: Offset) {
         val path = DrawingPath(
-            strokeColor = color.value,
+            strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
+            fillColor = fillColor.value.copy(alpha = fillAlpha.value),
             strokeWidth = stroke.value,
             alpha = alpha.value,
             colorFilter = colorFilter.value,
@@ -373,6 +435,7 @@ class WhiteBoxViewModel: ViewModel() {
             pathEffect = currentPathEffect,
             cap = capType.value,
             drawStyle = getDrawStyle(),
+            drawStyleType = drawStyleType.value
         )
         path.points.add(offset-canvasOffset.value)
         paths.add(path)
@@ -387,7 +450,7 @@ class WhiteBoxViewModel: ViewModel() {
     }
 
     fun setColor(it: Color) {
-        color.value = it
+        strokeColor.value = it
     }
 
     fun switchGrid() {

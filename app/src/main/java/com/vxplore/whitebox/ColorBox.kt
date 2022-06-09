@@ -36,7 +36,7 @@ fun StrokeColorBox(vm: WhiteBoxViewModel) {
                         color = it
                     )
             ) {
-                if(vm.color.value==it){
+                if(vm.strokeColor.value==it){
                     Icon(
                         imageVector = Icons.Default.Circle,
                         contentDescription ="Selected",

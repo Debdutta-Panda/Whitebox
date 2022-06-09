@@ -5,13 +5,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 
 object Constants {
+    val alphaSliderPadding = 12.dp
     val arrowDistance = 40f
     val capType = CapType.ROUND
     const val dashedPhase = 20f
     val dashedIntervals = floatArrayOf(20f, 20f)
     private const val dashedLineIconPathData = "M0,8h4v1h-4v-1zM6.5,9h4v-1h-4v1zM13,8v1h4v-1h-4z"
+    private const val ovalIconPathData = "M1,32a31,20 0,1 0,62 0a31,20 0,1 0,-62 0z"
+    private const val circleIconPathData = "M256,23.05C127.5,23.05 23.05,127.5 23.05,256S127.5,488.9 256,488.9 488.9,384.5 488.9,256 384.5,23.05 256,23.05zM256,40.95c118.9,0 215.1,96.15 215.1,215.05S374.9,471.1 256,471.1c-118.9,0 -215.05,-96.2 -215.05,-215.1C40.95,137.1 137.1,40.95 256,40.95z"
     const val toolSectionsWidth = 40
     val toolsSectionsDividerColor = Color.DarkGray
     private const val lineIconPathData = "M21.71,3.29a1,1 0,0 0,-1.42 0l-18,18a1,1 0,0 0,0 1.42,1 1,0 0,0 1.42,0l18,-18A1,1 0,0 0,21.71 3.29Z"
@@ -99,5 +103,21 @@ object Constants {
         toolIconSize,
         17f,
         17f
+    )
+
+    val ovalIcon = createImageVector(
+        ovalIconPathData,
+        toolIconSize,
+        toolIconSize,
+        64f,
+        64f
+    )
+
+    val circleIcon = createImageVector(
+        circleIconPathData,
+        toolIconSize,
+        toolIconSize,
+        512f,
+        512f
     )
 }
