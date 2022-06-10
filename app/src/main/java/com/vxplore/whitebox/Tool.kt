@@ -2,7 +2,7 @@ package com.vxplore.whitebox
 
 enum class Tool {
     MOVE,
-    PEN,
+    FREE_HAND,
     ERASER,
     CLEAN,
     HIGHLIGHTER,
@@ -11,5 +11,7 @@ enum class Tool {
     LINE,
     RECTANGLE,
     OVAL,
-    CIRCLE
+    CIRCLE_WITH_CENTER_AND_RADIUS,
+    CIRCLE_WITH_TWO_POINTS,
+    PEN
 }

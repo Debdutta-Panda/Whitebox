@@ -21,6 +21,7 @@ val StrokeJoinType.stokeJoin: StrokeJoin
     }
 
 class WhiteBoxViewModel: ViewModel() {
+    val penPathAdded = mutableStateOf(false)
     val fillAlpha = mutableStateOf(1f)
     val strokeAlpha = mutableStateOf(1f)
     val fillColor = mutableStateOf(Color.Black)
@@ -77,11 +78,11 @@ class WhiteBoxViewModel: ViewModel() {
     val paths = mutableStateListOf<DrawingPath>()
     //////////////////////////
 
-    fun drag(dragAmount: Offset) {
+    fun drag(dragAmount: Offset, offset: Offset) {
         try {
             when(tool.value){
                 Tool.MOVE -> handleMoveDrag(dragAmount)
-                Tool.PEN -> handlePenDrag(dragAmount)
+                Tool.FREE_HAND -> handleFreeHandDrag(dragAmount)
                 Tool.ERASER -> handleEraserDrag(dragAmount)
                 Tool.CLEAN -> {}
                 Tool.HIGHLIGHTER -> handleHighlighterDrag(dragAmount)
@@ -90,10 +91,25 @@ class WhiteBoxViewModel: ViewModel() {
                 Tool.LINE -> handleLineDrag(dragAmount)
                 Tool.RECTANGLE -> handleDragRectangle(dragAmount)
                 Tool.OVAL -> handleDragOval(dragAmount)
-                Tool.CIRCLE -> handleDragCircle(dragAmount)
+                Tool.CIRCLE_WITH_CENTER_AND_RADIUS -> handleDragCircle(dragAmount)
+                Tool.CIRCLE_WITH_TWO_POINTS -> handleDragCircle2Point(dragAmount)
+                Tool.PEN -> handlePenDrag(offset)
             }
         } catch (e: Exception) {
         }
+    }
+
+    private fun handlePenDrag(offset: Offset) {
+        paths.last().points[paths.last().points.size-1] = offset-canvasOffset.value
+        updateArrowHeads()
+        pathUpdated.value = System.currentTimeMillis()
+    }
+
+    private fun handleDragCircle2Point(dragAmount: Offset) {
+        var line = paths.last().twoPointData
+        line = Pair(line.first,line.second+dragAmount)
+        paths.last().twoPointData = line
+        pathUpdated.value = System.currentTimeMillis()
     }
 
     private fun handleDragCircle(dragAmount: Offset) {
@@ -242,7 +258,7 @@ class WhiteBoxViewModel: ViewModel() {
         pathUpdated.value = System.currentTimeMillis()
     }
 
-    private fun handlePenDrag(dragAmount: Offset) {
+    private fun handleFreeHandDrag(dragAmount: Offset) {
         val last = paths.last().points.last()
         val new = last + dragAmount
         paths.last().points.add(new)
@@ -258,15 +274,23 @@ class WhiteBoxViewModel: ViewModel() {
         if(newTool==Tool.CLEAN){
             paths.clear()
             pathUpdated.value = System.currentTimeMillis()
+            penPathAdded.value = false
             return
         }
         tool.value = newTool
+        if(newTool==Tool.PEN){
+            onPenToolSelected()
+        }
+    }
+
+    private fun onPenToolSelected() {
+        penPathAdded.value = false
     }
 
     fun dragStart(offset: Offset) {
         when(tool.value){
             Tool.MOVE -> handleMoveDragStart(offset)
-            Tool.PEN -> handlePenDragStart(offset)
+            Tool.FREE_HAND -> handleFreeHandDragStart(offset)
             Tool.ERASER -> handleEraserDragStart(offset)
             Tool.CLEAN -> {}
             Tool.HIGHLIGHTER -> handleHighlighterDragStart(offset)
@@ -275,8 +299,49 @@ class WhiteBoxViewModel: ViewModel() {
             Tool.LINE -> handleLineDragStart(offset)
             Tool.RECTANGLE -> handleRectangleDragStart(offset)
             Tool.OVAL -> handleOvalDragStart(offset)
-            Tool.CIRCLE -> handleCircleDragStart(offset)
+            Tool.CIRCLE_WITH_CENTER_AND_RADIUS -> handleCircleDragStart(offset)
+            Tool.CIRCLE_WITH_TWO_POINTS -> handle2PointCircleDragStart(offset)
+            Tool.PEN -> handlePenDragStart(offset)
         }
+    }
+
+    private fun handlePenDragStart(offset: Offset) {
+        if(!penPathAdded.value){
+            val path = DrawingPath(
+                strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
+                fillColor = fillColor.value.copy(alpha = fillAlpha.value),
+                strokeWidth = stroke.value,
+                alpha = alpha.value,
+                colorFilter = colorFilter.value,
+                blendMode = blendMode.value,
+                pathEffect = currentPathEffect,
+                cap = capType.value,
+                drawStyle = getDrawStyle(),
+                drawStyleType = drawStyleType.value
+            )
+            paths.add(path)
+            pathUpdated.value = System.currentTimeMillis()
+            penPathAdded.value = true
+        }
+        paths.last().points.add(offset-canvasOffset.value)
+        pathUpdated.value = System.currentTimeMillis()
+    }
+
+    private fun handle2PointCircleDragStart(offset: Offset) {
+        val path = DrawingPath(
+            strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
+            strokeWidth = stroke.value,
+            colorFilter = null,
+            blendMode = Constants.penBlendMode,
+            type = ShapeType.CIRCLE_WITH_2_POINT,
+            pathEffect = currentPathEffect,
+            cap = capType.value,
+            drawStyle = getDrawStyle(),
+            fillColor = fillColor.value.copy(alpha = fillAlpha.value),
+            drawStyleType = drawStyleType.value
+        )
+        path.twoPointData = Pair(offset-canvasOffset.value,offset-canvasOffset.value)
+        paths.add(path)
     }
 
     private fun handleCircleDragStart(offset: Offset) {
@@ -285,7 +350,7 @@ class WhiteBoxViewModel: ViewModel() {
             strokeWidth = stroke.value,
             colorFilter = null,
             blendMode = Constants.penBlendMode,
-            type = ShapeType.CIRCLE,
+            type = ShapeType.CIRCLE_WITH_CENTER_AND_RADIUS,
             pathEffect = currentPathEffect,
             cap = capType.value,
             drawStyle = getDrawStyle(),
@@ -424,7 +489,7 @@ class WhiteBoxViewModel: ViewModel() {
 
     }
 
-    private fun handlePenDragStart(offset: Offset) {
+    private fun handleFreeHandDragStart(offset: Offset) {
         val path = DrawingPath(
             strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
             fillColor = fillColor.value.copy(alpha = fillAlpha.value),
@@ -479,6 +544,10 @@ class WhiteBoxViewModel: ViewModel() {
 
     fun setDrawStyleType(type: DrawStyleType) {
         drawStyleType.value = type
+    }
+
+    fun onCloseCurrentPath() {
+        onPenToolSelected()
     }
 }
 

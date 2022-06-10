@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.res.painterResource
@@ -133,21 +134,33 @@ fun ColumnScope.ToolsSection(vm: WhiteBoxViewModel) {
             IconButton(onClick = {
                 vm.setTool(it)
             }) {
-                Icon(
-                    imageVector = getIcon(it),
-                    contentDescription = "Tool: ${it.name}",
-                    tint = toolTint(vm,it),
-                    modifier = Modifier.size(Constants.toolIconSize.dp)
-                )
+                val icon = getIcon(it)
+                if(icon is ImageVector){
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = "Tool: ${it.name}",
+                        tint = toolTint(vm,it),
+                        modifier = Modifier.size(Constants.toolIconSize.dp)
+                    )
+                }
+                else if(icon is Painter){
+                    Icon(
+                        painter = icon,
+                        contentDescription = "Tool: ${it.name}",
+                        tint = toolTint(vm,it),
+                        modifier = Modifier.size(Constants.toolIconSize.dp)
+                    )
+                }
             }
         }
     }
 }
 
-fun getIcon(tool: Tool): ImageVector {
+@Composable
+fun getIcon(tool: Tool): Any {
     return when(tool){
         MOVE -> Icons.Default.PanTool
-        PEN -> Icons.Default.Gesture
+        FREE_HAND -> Icons.Default.Gesture
         ERASER -> Constants.eraserIcon
         CLEAN -> Icons.Default.CleaningServices
         HIGHLIGHTER -> Constants.highlighterIcon
@@ -155,8 +168,10 @@ fun getIcon(tool: Tool): ImageVector {
         VERTICAL_LINE -> Constants.verticalLineIcon
         LINE -> Constants.lineIcon
         RECTANGLE -> Icons.Outlined.CheckBoxOutlineBlank
-        OVAL -> Constants.ovalIcon
-        CIRCLE -> Constants.circleIcon
+        OVAL -> painterResource(id = R.drawable.ic_oval)
+        CIRCLE_WITH_CENTER_AND_RADIUS -> painterResource(id = R.drawable.ic_center_radius_circle)
+        CIRCLE_WITH_TWO_POINTS -> painterResource(id = R.drawable.ic_2_point_circle)
+        PEN -> painterResource(id = R.drawable.ic_pen_svgrepo_com)
     }
 }
 

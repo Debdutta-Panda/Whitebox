@@ -4,6 +4,11 @@ import android.view.MotionEvent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.Button
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -23,7 +28,7 @@ fun MainScreenContent(vm: WhiteBoxViewModel) {
                 .pointerInteropFilter {
                     val x = it.x
                     val y = it.y
-                    val offset = Offset(x,y)
+                    val offset = Offset(x, y)
                     when (it.action) {
 
                         MotionEvent.ACTION_DOWN -> {
@@ -31,13 +36,13 @@ fun MainScreenContent(vm: WhiteBoxViewModel) {
                             lastOffset = offset
                         }
                         MotionEvent.ACTION_MOVE -> {
-                            vm.drag(offset - lastOffset)
+                            vm.drag(offset - lastOffset, offset)
                             lastOffset = offset
                         }
                         MotionEvent.ACTION_UP -> {
                             vm.dragEnd()
                         }
-                        else ->  false
+                        else -> false
                     }
                     return@pointerInteropFilter true
                 }
@@ -61,6 +66,18 @@ fun MainScreenContent(vm: WhiteBoxViewModel) {
             Drawing(vm)
         }
         ToolBox(vm)
-        StrokeSizeSlider(vm)
+        if(vm.tool.value==Tool.PEN&&vm.penPathAdded.value){
+            IconButton(onClick = {
+                vm.onCloseCurrentPath()
+            }) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close"
+                )
+            }
+        }
+        else{
+            StrokeSizeSlider(vm)
+        }
     }
 }

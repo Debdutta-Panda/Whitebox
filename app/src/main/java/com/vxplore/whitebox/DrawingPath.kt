@@ -14,7 +14,8 @@ enum class ShapeType{
     LINE_SEGMENT,
     RECTANGLE,
     OVAL,
-    CIRCLE
+    CIRCLE_WITH_CENTER_AND_RADIUS,
+    CIRCLE_WITH_2_POINT
 }
 
 data class ArrowHead(

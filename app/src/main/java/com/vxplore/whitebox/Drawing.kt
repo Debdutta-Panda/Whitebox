@@ -18,7 +18,8 @@ fun DrawScope.Drawing(vm: WhiteBoxViewModel) {
                     ShapeType.LINE_SEGMENT -> TODO()
                     ShapeType.RECTANGLE -> drawRectangle(vm,it)
                     ShapeType.OVAL -> drawOval(vm,it)
-                    ShapeType.CIRCLE -> drawCircle(vm,it)
+                    ShapeType.CIRCLE_WITH_CENTER_AND_RADIUS -> drawCircle(vm,it)
+                    ShapeType.CIRCLE_WITH_2_POINT -> drawCircleWith2Point(vm,it)
                 }
             }
             drawEraser(vm)
@@ -27,8 +28,58 @@ fun DrawScope.Drawing(vm: WhiteBoxViewModel) {
     }
 }
 
+fun DrawScope.drawCircleWith2Point(vm: WhiteBoxViewModel, path: DrawingPath) {
+    val points = path.twoPointData
+    val first = points.first
+    val second = points.second
+    val mid = (first + second)/2f
+    when(path.drawStyleType){
+        DrawStyleType.STROKE -> {
+            drawCircle(
+                color = path.strokeColor,
+                center = mid,
+                radius = distance(mid,path.twoPointData.second),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = path.drawStyle?:Fill
+            )
+        }
+        DrawStyleType.FILL -> {
+            drawCircle(
+                color = path.fillColor,
+                center = mid,
+                radius = distance(mid,path.twoPointData.second),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = Fill
+            )
+        }
+        DrawStyleType.BOTH -> {
+            drawCircle(
+                color = path.fillColor,
+                center = mid,
+                radius = distance(mid,path.twoPointData.second),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = Fill
+            )
+            drawCircle(
+                color = path.strokeColor,
+                center = mid,
+                radius = distance(mid,path.twoPointData.second),
+                colorFilter = path.colorFilter,
+                blendMode = path.blendMode,
+                alpha = path.alpha,
+                style = path.drawStyle?:Fill
+            )
+        }
+    }
+}
+
 fun DrawScope.drawCircle(vm: WhiteBoxViewModel, path: DrawingPath) {
-    val gap = path.twoPointData.second - path.twoPointData.first
     when(path.drawStyleType){
         DrawStyleType.STROKE -> {
             drawCircle(
