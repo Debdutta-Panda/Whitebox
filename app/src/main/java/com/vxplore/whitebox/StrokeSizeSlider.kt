@@ -19,7 +19,7 @@ fun BoxScope.StrokeSizeSlider(vm: WhiteBoxViewModel) {
         modifier = Modifier
             .padding(
                 start = Constants
-                    .strokeSliderStartPadding
+                    .sliderStartPadding
                     .dp,
                 end = Constants.strokeSliderEndPadding.dp
             )

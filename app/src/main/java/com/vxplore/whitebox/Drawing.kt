@@ -1,10 +1,15 @@
 package com.vxplore.whitebox
 
+import android.util.Log
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.NativeCanvas
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.*
 import androidx.compose.ui.graphics.nativeCanvas
-
+import kotlin.math.abs
+import kotlin.math.min
 
 
 fun DrawScope.Drawing(vm: WhiteBoxViewModel) {
@@ -12,6 +17,9 @@ fun DrawScope.Drawing(vm: WhiteBoxViewModel) {
         with(drawContext.canvas.nativeCanvas) {
             val checkPoint = saveLayer(null, null)
             vm.paths.forEach {
+                if(!it.active){
+                    return@forEach
+                }
                 when(it.type){
                     ShapeType.PATH -> drawPath(vm,it)
                     ShapeType.LINE -> drawLine(vm,it)
@@ -20,12 +28,161 @@ fun DrawScope.Drawing(vm: WhiteBoxViewModel) {
                     ShapeType.OVAL -> drawOval(vm,it)
                     ShapeType.CIRCLE_WITH_CENTER_AND_RADIUS -> drawCircle(vm,it)
                     ShapeType.CIRCLE_WITH_2_POINT -> drawCircleWith2Point(vm,it)
+                    ShapeType.TEXT -> drawText(vm,it)
+                    ShapeType.ARC -> drawArc(vm,it)
                 }
             }
             drawEraser(vm)
             restoreToCount(checkPoint)
         }
     }
+}
+
+fun DrawScope.drawArc(vm: WhiteBoxViewModel,path: DrawingPath){
+    val points = path.points
+    val count = points.size
+
+
+
+
+    when(count){
+        1->{
+            drawCircle(
+                color = path.bestColor,
+                radius = 5f,
+                center = points.last()+vm.canvasOffset.value,
+                style = Fill
+            )
+        }
+        2->{
+            drawCircle(
+                color = path.bestColor,
+                radius = 5f,
+                center = points.first()+vm.canvasOffset.value,
+                style = Fill
+            )
+            drawLine(
+                color = path.bestColor,
+                start = points.first()+vm.canvasOffset.value,
+                end = points.last()+vm.canvasOffset.value,
+                strokeWidth = 2f,
+            )
+        }
+        3->{
+            val A = points[0]
+            val B = points[1]
+            val C = points[2]
+            val c = distance(A,B)
+
+            val size = 2*c
+            val tl = A - Offset(c,c)
+
+            val angle1 = B.angle(A)
+            val angle2 = C.angle(A)
+            when(path.drawStyleType){
+                DrawStyleType.STROKE -> {
+                    drawArc(
+                        color = path.strokeColor,
+                        startAngle = angle1,
+                        sweepAngle = intendedSweep(path.sweepShortest,angle2,angle1),
+                        useCenter = path.withCenter,
+                        topLeft = tl+vm.canvasOffset.value,
+                        size = Size(size,size),
+                        alpha = path.alpha,
+                        style = path.drawStyle?:Fill,
+                        colorFilter = path.colorFilter,
+                        blendMode = path.blendMode
+                    )
+                }
+                DrawStyleType.FILL -> {
+                    drawArc(
+                        color = path.fillColor,
+                        startAngle = angle1,
+                        sweepAngle = intendedSweep(path.sweepShortest,angle2,angle1),
+                        useCenter = path.withCenter,
+                        topLeft = tl+vm.canvasOffset.value,
+                        size = Size(size,size),
+                        alpha = path.alpha,
+                        style = Fill,
+                        colorFilter = path.colorFilter,
+                        blendMode = path.blendMode
+                    )
+                }
+                DrawStyleType.BOTH -> {
+                    drawArc(
+                        color = path.fillColor,
+                        startAngle = angle1,
+                        sweepAngle = intendedSweep(path.sweepShortest,angle2,angle1),
+                        useCenter = path.withCenter,
+                        topLeft = tl+vm.canvasOffset.value,
+                        size = Size(size,size),
+                        alpha = path.alpha,
+                        style = Fill,
+                        colorFilter = path.colorFilter,
+                        blendMode = path.blendMode
+                    )
+                    drawArc(
+                        color = path.strokeColor,
+                        startAngle = angle1,
+                        sweepAngle = intendedSweep(path.sweepShortest,angle2,angle1),
+                        useCenter = path.withCenter,
+                        topLeft = tl+vm.canvasOffset.value,
+                        size = Size(size,size),
+                        alpha = path.alpha,
+                        style = path.drawStyle?:Fill,
+                        colorFilter = path.colorFilter,
+                        blendMode = path.blendMode
+                    )
+                }
+            }
+        }
+    }
+}
+
+fun intendedSweep(shortest: Boolean, angle2: Float, angle1: Float): Float {
+    val s = shortestSweep(angle2,angle1)
+    return if(shortest){
+        s
+    }
+    else{
+        when (s) {
+            in 0f..180f -> s-360
+            else -> s+360
+        }
+    }
+}
+
+fun shortestSweep(angle2: Float, angle1: Float): Float {
+    val dif = angle2 - angle1
+    val absDif = abs(dif)
+    val other = 360 - absDif
+    val min = min(absDif,other)
+    val r = if(min == absDif){
+        dif
+    }
+    else{
+        val t = 360 + dif
+        if(t>360){
+            dif - 360
+
+        }
+        else{
+            if(dif < -180){
+                dif+360
+            }
+            else{
+                dif
+            }
+        }
+    }
+    Log.d("fljflsfsdlj","$dif,$r")
+    return r
+}
+
+fun NativeCanvas.drawText(vm: WhiteBoxViewModel, path: DrawingPath){
+    val point = path.points.last()
+    val cp = vm.canvasOffset.value
+    drawText(path.text?:"",point.x+cp.x,point.y+cp.y,path.paint?:return)
 }
 
 fun DrawScope.drawCircleWith2Point(vm: WhiteBoxViewModel, path: DrawingPath) {
@@ -37,7 +194,7 @@ fun DrawScope.drawCircleWith2Point(vm: WhiteBoxViewModel, path: DrawingPath) {
         DrawStyleType.STROKE -> {
             drawCircle(
                 color = path.strokeColor,
-                center = mid,
+                center = mid+vm.canvasOffset.value,
                 radius = distance(mid,path.twoPointData.second),
                 colorFilter = path.colorFilter,
                 blendMode = path.blendMode,
@@ -48,7 +205,7 @@ fun DrawScope.drawCircleWith2Point(vm: WhiteBoxViewModel, path: DrawingPath) {
         DrawStyleType.FILL -> {
             drawCircle(
                 color = path.fillColor,
-                center = mid,
+                center = mid+vm.canvasOffset.value,
                 radius = distance(mid,path.twoPointData.second),
                 colorFilter = path.colorFilter,
                 blendMode = path.blendMode,
@@ -59,7 +216,7 @@ fun DrawScope.drawCircleWith2Point(vm: WhiteBoxViewModel, path: DrawingPath) {
         DrawStyleType.BOTH -> {
             drawCircle(
                 color = path.fillColor,
-                center = mid,
+                center = mid+vm.canvasOffset.value,
                 radius = distance(mid,path.twoPointData.second),
                 colorFilter = path.colorFilter,
                 blendMode = path.blendMode,
@@ -68,7 +225,7 @@ fun DrawScope.drawCircleWith2Point(vm: WhiteBoxViewModel, path: DrawingPath) {
             )
             drawCircle(
                 color = path.strokeColor,
-                center = mid,
+                center = mid+vm.canvasOffset.value,
                 radius = distance(mid,path.twoPointData.second),
                 colorFilter = path.colorFilter,
                 blendMode = path.blendMode,
@@ -84,7 +241,7 @@ fun DrawScope.drawCircle(vm: WhiteBoxViewModel, path: DrawingPath) {
         DrawStyleType.STROKE -> {
             drawCircle(
                 color = path.strokeColor,
-                center = path.twoPointData.first,
+                center = path.twoPointData.first+vm.canvasOffset.value,
                 radius = distance(path.twoPointData.first,path.twoPointData.second),
                 colorFilter = path.colorFilter,
                 blendMode = path.blendMode,
@@ -95,7 +252,7 @@ fun DrawScope.drawCircle(vm: WhiteBoxViewModel, path: DrawingPath) {
         DrawStyleType.FILL -> {
             drawCircle(
                 color = path.fillColor,
-                center = path.twoPointData.first,
+                center = path.twoPointData.first+vm.canvasOffset.value,
                 radius = distance(path.twoPointData.first,path.twoPointData.second),
                 colorFilter = path.colorFilter,
                 blendMode = path.blendMode,
@@ -106,7 +263,7 @@ fun DrawScope.drawCircle(vm: WhiteBoxViewModel, path: DrawingPath) {
         DrawStyleType.BOTH -> {
             drawCircle(
                 color = path.fillColor,
-                center = path.twoPointData.first,
+                center = path.twoPointData.first+vm.canvasOffset.value,
                 radius = distance(path.twoPointData.first,path.twoPointData.second),
                 colorFilter = path.colorFilter,
                 blendMode = path.blendMode,
@@ -115,7 +272,7 @@ fun DrawScope.drawCircle(vm: WhiteBoxViewModel, path: DrawingPath) {
             )
             drawCircle(
                 color = path.strokeColor,
-                center = path.twoPointData.first,
+                center = path.twoPointData.first+vm.canvasOffset.value,
                 radius = distance(path.twoPointData.first,path.twoPointData.second),
                 colorFilter = path.colorFilter,
                 blendMode = path.blendMode,
@@ -252,6 +409,20 @@ fun DrawScope.drawLine(vm: WhiteBoxViewModel, path: DrawingPath){
         cap = path.cap.strokeType,
         pathEffect = path.pathEffect,
     )
+    if(path.hashCode()==vm.selectedPath.value){
+        drawLine(
+            start = path.twoPointData.first+vm.canvasOffset.value,
+            end = path.twoPointData.second+vm.canvasOffset.value,
+            color = Color.Black,
+            strokeWidth = 4f,
+        )
+        drawLine(
+            start = path.twoPointData.first+vm.canvasOffset.value,
+            end = path.twoPointData.second+vm.canvasOffset.value,
+            color = Color.Green,
+            strokeWidth = 2f,
+        )
+    }
     drawArrow(path,vm)
 }
 

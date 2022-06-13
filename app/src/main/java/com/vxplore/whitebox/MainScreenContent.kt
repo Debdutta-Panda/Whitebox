@@ -4,7 +4,6 @@ import android.view.MotionEvent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.Button
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
@@ -28,7 +27,7 @@ fun MainScreenContent(vm: WhiteBoxViewModel) {
                 .pointerInteropFilter {
                     val x = it.x
                     val y = it.y
-                    val offset = Offset(x, y)
+                    val offset = vm.filter(Offset(x, y))
                     when (it.action) {
 
                         MotionEvent.ACTION_DOWN -> {
@@ -42,30 +41,16 @@ fun MainScreenContent(vm: WhiteBoxViewModel) {
                         MotionEvent.ACTION_UP -> {
                             vm.dragEnd()
                         }
-                        else -> false
+                        else -> return@pointerInteropFilter false
                     }
                     return@pointerInteropFilter true
                 }
-            /*.pointerInput(Unit) {
-                    detectDragGestures(
-                        onDragStart = {
-                            vm.dragStart(it)
-                        },
-                        onDragEnd = {
-                            vm.dragEnd()
-                        },
-                        onDragCancel = {
-                            vm.dragCancel()
-                        }
-                    ) { change, dragAmount ->
-                        vm.drag(dragAmount)
-                    }
-            }*/
         ){
             GraphPaper(vm)
             Drawing(vm)
         }
         ToolBox(vm)
+        LayersButton(vm)
         if(vm.tool.value==Tool.PEN&&vm.penPathAdded.value){
             IconButton(onClick = {
                 vm.onCloseCurrentPath()
@@ -79,5 +64,13 @@ fun MainScreenContent(vm: WhiteBoxViewModel) {
         else{
             StrokeSizeSlider(vm)
         }
+        LayersWindow(vm)
     }
+    TextInputDialog(vm)
 }
+
+
+
+
+
+

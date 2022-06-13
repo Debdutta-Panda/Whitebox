@@ -1,5 +1,8 @@
 package com.vxplore.whitebox
 
+import android.graphics.Paint
+import android.util.Log
+import android.view.KeyEvent
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
@@ -9,7 +12,9 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.core.math.MathUtils.clamp
 import androidx.lifecycle.ViewModel
+import kotlin.math.sqrt
 
 val StrokeJoinType.stokeJoin: StrokeJoin
     get() {
@@ -21,6 +26,18 @@ val StrokeJoinType.stokeJoin: StrokeJoin
     }
 
 class WhiteBoxViewModel: ViewModel() {
+    val layersWindowOpen = mutableStateOf(false)
+    val selectedPath = mutableStateOf(0)
+    private var arcPressCount = 0
+    private var arcWithCenterPressCount = 0
+    val sweepShortestWithCenter = mutableStateOf(true)
+    val sweepShortest = mutableStateOf(true)
+    private var lineSelected = 0L
+    val snapToGrid = mutableStateOf(false)
+    private val keyboardEnabled = mutableStateOf(true)
+    private val textPos = mutableStateOf(Offset.Zero)
+    val textDialog = mutableStateOf(false)
+    private val dotSize = mutableStateOf(10f)
     val penPathAdded = mutableStateOf(false)
     val fillAlpha = mutableStateOf(1f)
     val strokeAlpha = mutableStateOf(1f)
@@ -57,8 +74,7 @@ class WhiteBoxViewModel: ViewModel() {
     ///////////////////////////
     val canvasOffset = mutableStateOf(Offset.Zero)
     ////////////////////////
-    val xGridGap = mutableStateOf(Constants.xGridGap)
-    val yGridGap = mutableStateOf(Constants.yGridGap)
+    val gridGap = mutableStateOf(Constants.gridGap)
     ////////////////////////////
     val xGridStroke = mutableStateOf(Constants.xGridStroke)
     val yGridStroke = mutableStateOf(Constants.yGridStroke)
@@ -271,15 +287,28 @@ class WhiteBoxViewModel: ViewModel() {
     }
 
     fun setTool(newTool: Tool) {
+        if(newTool==Tool.ARC&&newTool==tool.value){
+            sweepShortest.toggle()
+            return
+        }
+        if(newTool==Tool.ARC_WITH_CENTER&&newTool==tool.value){
+            sweepShortestWithCenter.toggle()
+            return
+        }
         if(newTool==Tool.CLEAN){
             paths.clear()
             pathUpdated.value = System.currentTimeMillis()
             penPathAdded.value = false
+            arcPressCount = 0
+            arcWithCenterPressCount = 0
             return
         }
         tool.value = newTool
         if(newTool==Tool.PEN){
             onPenToolSelected()
+        }
+        if(tool.value==Tool.LINE){
+            lineSelected = System.currentTimeMillis()
         }
     }
 
@@ -302,12 +331,162 @@ class WhiteBoxViewModel: ViewModel() {
             Tool.CIRCLE_WITH_CENTER_AND_RADIUS -> handleCircleDragStart(offset)
             Tool.CIRCLE_WITH_TWO_POINTS -> handle2PointCircleDragStart(offset)
             Tool.PEN -> handlePenDragStart(offset)
+            Tool.DOT -> handleDot(offset)
+            Tool.TEXT -> handleTextStart(offset)
+            Tool.ARC -> handleArcStart(offset)
+            Tool.ARC_WITH_CENTER -> handleArcWithCenterStart(offset)
+            Tool.TRANSFORM -> handleTransformStart(offset)
         }
+    }
+
+    private fun handleTransformStart(offset: Offset) {
+        val effectivePoint = offset - canvasOffset.value
+        for(path in paths){
+            val found: Boolean = hit(path,effectivePoint)
+            if(found){
+                selectPath(path)
+                Log.d("flslfsjfsdfs","touched")
+                return
+            }
+        }
+    }
+
+    private fun hit(path: DrawingPath, effectivePoint: Offset): Boolean {
+        return when(path.type){
+            ShapeType.PATH -> TODO()
+            ShapeType.LINE -> hitLine(path,effectivePoint)
+            ShapeType.LINE_SEGMENT -> TODO()
+            ShapeType.RECTANGLE -> TODO()
+            ShapeType.OVAL -> TODO()
+            ShapeType.CIRCLE_WITH_CENTER_AND_RADIUS -> TODO()
+            ShapeType.CIRCLE_WITH_2_POINT -> TODO()
+            ShapeType.TEXT -> TODO()
+            ShapeType.ARC -> TODO()
+        }
+    }
+
+    private fun hitLine(path: DrawingPath, effectivePoint: Offset): Boolean {
+        val pointer = effectivePoint
+        val end1 = path.twoPointData.first
+        val end2 = path.twoPointData.second
+        val touchRadius = 20f
+        return isTouching(pointer,end1,end2,touchRadius)
+    }
+
+    private fun isTouching(pointer: Offset, end1:Offset, end2:Offset, touchRadius: Float):Boolean{
+        val a = distance(pointer,end1)
+        val b = distance(pointer,end2)
+        val c = distance(end2,end1)
+
+        val c1 = (a.square()-b.square()+c.square())/(2*c)
+        val c2 = c - c1
+
+        val d = sqrt(a.square() - c1.square())
+        return d<=touchRadius && c1<c && c2<c
+    }
+
+    private fun selectPath(path: DrawingPath) {
+        selectedPath.value = path.hashCode()
+        pathUpdated.value = System.currentTimeMillis()
+        /////////////////
+        val points = floatArrayOf(0f,0f,100f,100f)
+        val ePoints = FloatArray(4)
+        val m = android.graphics.Matrix()
+        m.setRotate(90f,50f,50f)
+        m.mapPoints(ePoints, points)
+        val a = ePoints.size
+        Log.d("fdfdfd",a.toString())
+    }
+
+    private fun handleArcWithCenterStart(offset: Offset) {
+        ++arcWithCenterPressCount
+        if(arcWithCenterPressCount==1){
+            val path = DrawingPath(
+                Constants.displayNames.arcWithCenter,
+                strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
+                strokeWidth = stroke.value,
+                colorFilter = null,
+                blendMode = Constants.penBlendMode,
+                type = ShapeType.ARC,
+                pathEffect = currentPathEffect,
+                cap = capType.value,
+                drawStyle = getDrawStyle(),
+                fillColor = fillColor.value.copy(alpha = fillAlpha.value),
+                drawStyleType = drawStyleType.value,
+                sweepShortest = sweepShortestWithCenter.value,
+                withCenter = true
+            )
+            path.points.add(offset-canvasOffset.value)
+            paths.add(path)
+        }
+        if(arcWithCenterPressCount==2){
+            paths.last().points.add(offset-canvasOffset.value)
+        }
+        if(arcWithCenterPressCount==3){
+            paths.last().points.add(offset-canvasOffset.value)
+            arcWithCenterPressCount = 0
+        }
+        pathUpdated.value = System.currentTimeMillis()
+    }
+
+    private fun handleArcStart(offset: Offset) {
+        ++arcPressCount
+        if(arcPressCount==1){
+            val path = DrawingPath(
+                Constants.displayNames.arc,
+                strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
+                strokeWidth = stroke.value,
+                colorFilter = null,
+                blendMode = Constants.penBlendMode,
+                type = ShapeType.ARC,
+                pathEffect = currentPathEffect,
+                cap = capType.value,
+                drawStyle = getDrawStyle(),
+                fillColor = fillColor.value.copy(alpha = fillAlpha.value),
+                drawStyleType = drawStyleType.value,
+                sweepShortest = sweepShortest.value
+            )
+            path.points.add(offset-canvasOffset.value)
+            paths.add(path)
+        }
+        if(arcPressCount==2){
+            paths.last().points.add(offset-canvasOffset.value)
+        }
+        if(arcPressCount==3){
+            paths.last().points.add(offset-canvasOffset.value)
+            arcPressCount = 0
+        }
+        pathUpdated.value = System.currentTimeMillis()
+    }
+
+    private fun handleTextStart(offset: Offset) {
+        textPos.value = offset
+        textDialog.value = true
+    }
+
+    private fun handleDot(offset: Offset) {
+        val path = DrawingPath(
+            Constants.displayNames.dot,
+            strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
+            strokeWidth = stroke.value,
+            colorFilter = null,
+            blendMode = Constants.penBlendMode,
+            type = ShapeType.CIRCLE_WITH_CENTER_AND_RADIUS,
+            pathEffect = currentPathEffect,
+            cap = capType.value,
+            drawStyle = getDrawStyle(),
+            fillColor = fillColor.value.copy(alpha = fillAlpha.value),
+            drawStyleType = drawStyleType.value
+        )
+        path.twoPointData = Pair(offset-canvasOffset.value,offset-canvasOffset.value+Offset(dotSize.value,0f))
+        paths.add(path)
+        pathUpdated.value = System.currentTimeMillis()
     }
 
     private fun handlePenDragStart(offset: Offset) {
         if(!penPathAdded.value){
             val path = DrawingPath(
+                Constants.displayNames.pen,
                 strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
                 fillColor = fillColor.value.copy(alpha = fillAlpha.value),
                 strokeWidth = stroke.value,
@@ -322,6 +501,7 @@ class WhiteBoxViewModel: ViewModel() {
             paths.add(path)
             pathUpdated.value = System.currentTimeMillis()
             penPathAdded.value = true
+            paths.last().points.add(offset-canvasOffset.value)
         }
         paths.last().points.add(offset-canvasOffset.value)
         pathUpdated.value = System.currentTimeMillis()
@@ -329,6 +509,7 @@ class WhiteBoxViewModel: ViewModel() {
 
     private fun handle2PointCircleDragStart(offset: Offset) {
         val path = DrawingPath(
+            Constants.displayNames._2PointCircle,
             strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
             strokeWidth = stroke.value,
             colorFilter = null,
@@ -346,6 +527,7 @@ class WhiteBoxViewModel: ViewModel() {
 
     private fun handleCircleDragStart(offset: Offset) {
         val path = DrawingPath(
+            Constants.displayNames.circle,
             strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
             strokeWidth = stroke.value,
             colorFilter = null,
@@ -363,6 +545,7 @@ class WhiteBoxViewModel: ViewModel() {
 
     private fun handleOvalDragStart(offset: Offset) {
         val path = DrawingPath(
+            Constants.displayNames.oval,
             strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
             strokeWidth = stroke.value,
             colorFilter = null,
@@ -380,6 +563,7 @@ class WhiteBoxViewModel: ViewModel() {
 
     private fun handleRectangleDragStart(offset: Offset) {
         val path = DrawingPath(
+            Constants.displayNames.rectangle,
             strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
             strokeWidth = stroke.value,
             colorFilter = null,
@@ -414,6 +598,7 @@ class WhiteBoxViewModel: ViewModel() {
 
     private fun handleLineDragStart(offset: Offset) {
         val path = DrawingPath(
+            Constants.displayNames.line,
             strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
             strokeWidth = stroke.value,
             colorFilter = null,
@@ -428,6 +613,7 @@ class WhiteBoxViewModel: ViewModel() {
 
     private fun handleVerticalDragStart(offset: Offset) {
         val path = DrawingPath(
+            Constants.displayNames.verticalLine,
             strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
             strokeWidth = stroke.value,
             colorFilter = null,
@@ -442,6 +628,7 @@ class WhiteBoxViewModel: ViewModel() {
 
     private fun handleHLineDragStart(offset: Offset) {
         val path = DrawingPath(
+            Constants.displayNames.horizontalLine,
             strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
             strokeWidth = stroke.value,
             colorFilter = null,
@@ -456,12 +643,15 @@ class WhiteBoxViewModel: ViewModel() {
 
     private fun handleHighlighterDragStart(offset: Offset) {
         val path = DrawingPath(
+            Constants.displayNames.highlighter,
             strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
             strokeWidth = stroke.value,
             colorFilter = null,
             blendMode = Constants.highlighterBlendMode,
             pathEffect = currentPathEffect,
-            cap = capType.value
+            cap = capType.value,
+            drawStyle = getDrawStyle(),
+            drawStyleType = drawStyleType.value
         )
         path.points.add(offset-canvasOffset.value)
         paths.add(path)
@@ -470,6 +660,7 @@ class WhiteBoxViewModel: ViewModel() {
     private fun handleEraserDragStart(offset: Offset) {
         showEraser.value = true
         val path = DrawingPath(
+            Constants.displayNames.eraser,
             strokeColor = eraserColor.value,
             fillColor = eraserColor.value,
             strokeWidth = stroke.value,
@@ -491,6 +682,7 @@ class WhiteBoxViewModel: ViewModel() {
 
     private fun handleFreeHandDragStart(offset: Offset) {
         val path = DrawingPath(
+            Constants.displayNames.freeHand,
             strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
             fillColor = fillColor.value.copy(alpha = fillAlpha.value),
             strokeWidth = stroke.value,
@@ -549,6 +741,277 @@ class WhiteBoxViewModel: ViewModel() {
     fun onCloseCurrentPath() {
         onPenToolSelected()
     }
+
+    fun onTextDialogDismissRequest() {
+        textPos.value = Offset.Zero
+        textDialog.value = false
+    }
+
+    fun onTextDialogCancel() {
+        onTextDialogDismissRequest()
+    }
+
+    fun onTextDialogDone(text: String) {
+        textDialog.value = false
+        if(text.isEmpty()){
+            return
+        }
+        paths.add(
+            DrawingPath(
+                Constants.displayNames.text,
+                strokeColor = strokeColor.value.copy(alpha = strokeAlpha.value),
+                strokeWidth = stroke.value,
+                points = mutableListOf(textPos.value-canvasOffset.value),
+                alpha = alpha.value,
+                colorFilter = colorFilter.value,
+                blendMode = blendMode.value,
+                type = ShapeType.TEXT,
+                pathEffect = currentPathEffect,
+                cap = capType.value,
+                fillColor = fillColor.value.copy(alpha = fillAlpha.value),
+                drawStyle = getDrawStyle(),
+                drawStyleType = drawStyleType.value,
+                text = text,
+                paint = android.text.TextPaint().apply {
+                    this.isAntiAlias = true
+                    this.style = when(drawStyleType.value){
+                        DrawStyleType.STROKE -> Paint.Style.STROKE
+                        DrawStyleType.FILL -> Paint.Style.FILL
+                        DrawStyleType.BOTH -> Paint.Style.FILL_AND_STROKE
+                    }
+                    this.textSize = stroke.value*10
+                    val c = strokeColor.value.copy(alpha = strokeAlpha.value)
+                    this.color = android.graphics.Color.parseColor("#"+getHexColorValue(c.alpha,c.red,c.green,c.blue))
+                }
+            )
+        )
+        pathUpdated.value = System.currentTimeMillis()
+    }
+
+    fun onKeyDown(var1: Int, var2: KeyEvent?): Boolean {
+        Log.d("fsffsfs","$var1")
+        if(!keyboardEnabled.value){
+            return false
+        }
+        when(var1){
+            KeyEvent.KEYCODE_NUMPAD_ADD->{
+                stroke.value = clamp(stroke.value + 1,0f,Constants.maxStroke)
+            }
+            KeyEvent.KEYCODE_NUMPAD_SUBTRACT->{
+                stroke.value = clamp(stroke.value - 1,0f,Constants.maxStroke)
+            }
+        }
+        return true
+    }
+
+    fun onKeyLongPress(var1: Int, var2: KeyEvent?): Boolean {
+        if(!keyboardEnabled.value){
+            return false
+        }
+        return true
+    }
+
+    fun onKeyMultiple(var1: Int, var2: Int, var3: KeyEvent?): Boolean {
+        if(!keyboardEnabled.value){
+            return false
+        }
+        return true
+    }
+
+
+    fun onKeyUp(var1: Int, var2: KeyEvent?): Boolean {
+        Log.d("ffljlfjdflj","$var1")
+        if(!keyboardEnabled.value){
+            return false
+        }
+        if(var1==KeyEvent.KEYCODE_3&&(var2?.isShiftPressed==true)){
+            switchGrid()
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_M){
+            setTool(Tool.MOVE)
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_F){
+            setTool(Tool.FREE_HAND)
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_T){
+            setTool(Tool.TEXT)
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_E){
+            setTool(Tool.ERASER)
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_X){
+            setTool(Tool.CLEAN)
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_H){
+            if(tool.value==Tool.LINE&&(System.currentTimeMillis()-lineSelected)<=2000){
+                setTool(Tool.HORIZONTAL_LINE)
+                return true
+            }
+            setTool(Tool.HIGHLIGHTER)
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_V){
+            if(tool.value==Tool.LINE&&(System.currentTimeMillis()-lineSelected)<=Constants.lineTypeDebounceMillis){
+                setTool(Tool.VERTICAL_LINE)
+                return true
+            }
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_SLASH){
+            setTool(Tool.LINE)
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_R){
+            setTool(Tool.RECTANGLE)
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_O){
+            setTool(Tool.OVAL)
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_C&&(var2?.isShiftPressed==true)){
+            setTool(Tool.CIRCLE_WITH_TWO_POINTS)
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_C){
+            setTool(Tool.CIRCLE_WITH_CENTER_AND_RADIUS)
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_P){
+            setTool(Tool.PEN)
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_PERIOD){
+            setTool(Tool.DOT)
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_COMMA){
+            switchCapType()
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_L){
+            switchLineType()
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_NUMPAD_4){
+            backwardArrowHead.toggle()
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_NUMPAD_6){
+            forwardArrowHead.toggle()
+            return true
+        }
+        if(var1==KeyEvent.KEYCODE_ESCAPE){
+            if(tool.value == Tool.PEN){
+                onCloseCurrentPath()
+                return true
+            }
+            return true
+        }
+        return true
+    }
+
+    fun toggleGridSnap() {
+        snapToGrid.toggle()
+    }
+
+    fun filter(offset: Offset): Offset {
+        if(tool.value == Tool.MOVE){
+            return offset
+        }
+        if(!snapToGrid.value){
+            return offset
+        }
+        ///////////////////////
+        val gx = canvasOffset.value.x%gridGap.value
+        val gy = canvasOffset.value.y%gridGap.value
+        var g = gridGap.value
+        val x = offset.x - gx
+        val y = offset.y - gy
+
+        var finalX = 0f
+        var finalY = 0f
+        val rx = x%g
+        finalX = if(rx==0f){
+            x
+        } else{
+            val px = x - rx
+            val nx = px + g
+            if(x-px<nx-x){
+                px
+            } else{
+                nx
+            }
+        }
+        val ry = y%g
+        finalY = if(ry==0f){
+            y
+        } else{
+            val py = y - ry
+            val ny = py + g
+            if(y-py<ny-y){
+                py
+            } else{
+                ny
+            }
+        }
+        ///////////////////////
+        return Offset(finalX + gx,finalY + gy)
+    }
+
+    fun onLayersClick() {
+        layersWindowOpen.value = true
+    }
+
+    fun onLayersCloseClick() {
+        layersWindowOpen.value = false
+    }
+
+    fun onPathActiveChanged(item: DrawingPath, active: Boolean) {
+        item.active = active
+        pathUpdated.value = System.currentTimeMillis()
+    }
+}
+val hexCodes = listOf(
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F'
+)
+
+val Number.hex: String
+    get() {
+        val i = this.toInt()
+        val q = i / 16
+        val r = i % 16
+        val qc = hexCodes[q]
+        val rc = hexCodes[r]
+        return String(charArrayOf(qc, rc))
+    }
+fun getHexColorValue(alpha: Float,red: Float, green: Float, blue: Float): String {
+    val hred = (red*255).hex
+    val hgreen = (green*255).hex
+    val hblue = (blue*255).hex
+    val halpha = (alpha*255).hex
+    return "${halpha}${hred}${hgreen}${hblue}"
 }
 
 

@@ -14,7 +14,7 @@ fun StrokeAlphaBox(vm: WhiteBoxViewModel) {
             vm.strokeAlpha.value = it
         },
         modifier = Modifier
-            .padding(Constants.alphaSliderPadding)
+            .padding(Constants.bottomSheetSliderPadding)
             .fillMaxWidth()
     )
 }

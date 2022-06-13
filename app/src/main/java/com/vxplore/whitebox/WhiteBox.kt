@@ -25,7 +25,8 @@ fun WhiteBox(vm: WhiteBoxViewModel) {
         },
         scaffoldState = bottomSheetScaffoldState,
         sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        sheetBackgroundColor = vm.sheetColor.value,
+        sheetBackgroundColor = vm.sheetColor.value.copy(alpha = 0f),
+        sheetElevation = 0.dp
         // sheetPeekHeight = 0.dp,
         // scrimColor = Color.Red,  // Color for the fade background when you open/close the bottom sheet
     ) {

@@ -1,5 +1,6 @@
 package com.vxplore.whitebox
 
+import android.graphics.Paint
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
@@ -15,7 +16,9 @@ enum class ShapeType{
     RECTANGLE,
     OVAL,
     CIRCLE_WITH_CENTER_AND_RADIUS,
-    CIRCLE_WITH_2_POINT
+    CIRCLE_WITH_2_POINT,
+    TEXT,
+    ARC
 }
 
 data class ArrowHead(
@@ -24,6 +27,7 @@ data class ArrowHead(
 )
 
 data class DrawingPath(
+    val displayName: String,
     var strokeColor: Color = Color.Black,
     var strokeWidth: Float = 1f,
     var points: MutableList<Offset> = mutableListOf(),
@@ -38,5 +42,18 @@ data class DrawingPath(
     var backArrowHead: ArrowHead? = null,
     val drawStyle: DrawStyle? = null,
     val fillColor: Color = Color.Black,
-    val drawStyleType:DrawStyleType = DrawStyleType.STROKE
-)
+    val drawStyleType:DrawStyleType = DrawStyleType.STROKE,
+    val text: String? = null,
+    val paint: Paint? = null,
+    val sweepShortest: Boolean = true,
+    val withCenter: Boolean = false,
+    var active: Boolean = true
+) {
+    val bestColor: Color
+    get(){
+        return when(drawStyleType){
+            DrawStyleType.STROKE -> strokeColor
+            else -> fillColor
+        }
+    }
+}

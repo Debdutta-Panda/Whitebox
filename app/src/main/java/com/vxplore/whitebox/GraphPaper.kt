@@ -8,11 +8,11 @@ fun DrawScope.GraphPaper(vm: WhiteBoxViewModel) {
     val canvasHeight = size.height
 
     val offsetX = vm.canvasOffset.value.x
-    val xGridGap = vm.xGridGap.value
+    val xGridGap = vm.gridGap.value
     var gridY = 0f
     ///////////////////////////
     val offsetY = vm.canvasOffset.value.y
-    val yGridGap = vm.yGridGap.value
+    val yGridGap = vm.gridGap.value
     var gridX = 0f
     if(
         vm.gridMode.value==GridMode.Y

@@ -3,10 +3,16 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/arc_max_with_center.xml" value="0.1775" />
+        <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_arc.xml" value="0.187" />
+        <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_arc_max.xml" value="0.187" />
+        <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_arc_with_center.xml" value="0.1775" />
         <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_center_radius_circle.xml" value="0.117" />
         <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_circle_svgrepo_com.xml" value="0.1785" />
         <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_eraser_svgrepo_com.xml" value="0.1" />
         <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_grid_none.xml" value="0.2845" />
+        <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_grid_snap_off.xml" value="0.187" />
+        <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_grid_snap_on.xml" value="0.187" />
         <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_grid_svgrepo_com.xml" value="0.2845" />
         <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_grid_x.xml" value="0.2845" />
         <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_grid_y.xml" value="0.2845" />
@@ -16,6 +22,7 @@
         <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_line_dashed_svgrepo_com.xml" value="0.1105" />
         <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_line_h_svgrepo_com.xml" value="0.2845" />
         <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_line_v_svgrepo_com.xml" value="0.1325" />
+        <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_oval.xml" value="0.1775" />
         <entry key="..\:/AndroidStudioProjects/Whitebox/app/src/main/res/drawable/ic_shape_oval_svgrepo_com.xml" value="0.237" />
       </map>
     </option>
