@@ -47,8 +47,15 @@ data class DrawingPath(
     val paint: Paint? = null,
     val sweepShortest: Boolean = true,
     val withCenter: Boolean = false,
-    var active: Boolean = true
+    var active: Boolean = true,
+    var isEraser:Boolean = false,
+    var index: Int = -1,
+    val transformations: MutableList<Transform>? = null
 ) {
+    fun map(offset: Offset): Offset {
+        return offset
+    }
+
     val bestColor: Color
     get(){
         return when(drawStyleType){
@@ -56,4 +63,51 @@ data class DrawingPath(
             else -> fillColor
         }
     }
+
+    val clone: DrawingPath
+    get(){
+        return DrawingPath(
+            displayName = this.displayName,
+            strokeColor = this.strokeColor.copy(),
+            strokeWidth = this.strokeWidth,
+            points = this.points.clone(),
+            alpha = this.alpha,
+            colorFilter = this.colorFilter,
+            blendMode = this.blendMode,
+            type = this.type,
+            twoPointData = this.twoPointData.clone(),
+            pathEffect = this.pathEffect,
+            cap = this.cap,
+            forwardArrowHead = this.forwardArrowHead?.clone(),
+            backArrowHead = this.backArrowHead?.clone(),
+            drawStyle = this.drawStyle,
+            fillColor = this.fillColor.copy(),
+            drawStyleType = this.drawStyleType,
+            text = this.text,
+            paint = if(this.paint==null) null else Paint(this.paint),
+            sweepShortest = this.sweepShortest,
+            withCenter = this.withCenter,
+            active = this.active,
+            isEraser = this.isEraser,
+            index = this.index
+        )
+    }
+}
+
+fun Offset.clone():Offset{
+    return Offset(x,y)
+}
+fun Pair<Offset,Offset>.clone():Pair<Offset,Offset>{
+    return Pair(first.clone(),second.clone())
+}
+fun MutableList<Offset>.clone():MutableList<Offset>{
+    return this.map {
+        it.clone()
+    }.toMutableList()
+}
+fun ArrowHead.clone():ArrowHead{
+    return ArrowHead(
+        center.clone(),
+        target.clone()
+    )
 }

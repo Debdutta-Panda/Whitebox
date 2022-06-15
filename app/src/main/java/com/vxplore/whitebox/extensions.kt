@@ -75,3 +75,5 @@ fun createImageVector(path: String, width: Int,height: Int, vWidth: Float,vHeigh
         build()
     }
 }
+
+val Color.Companion.lightRed: Color get() = Color(0xffe64949)

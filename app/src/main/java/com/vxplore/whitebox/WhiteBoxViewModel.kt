@@ -26,6 +26,9 @@ val StrokeJoinType.stokeJoin: StrokeJoin
     }
 
 class WhiteBoxViewModel: ViewModel() {
+    private val touchRadius = mutableStateOf(20f)
+    val layerDeleteDialogOpen = mutableStateOf(false)
+    val editingPath = mutableStateOf<DrawingPath?>(null)
     val layersWindowOpen = mutableStateOf(false)
     val selectedPath = mutableStateOf(0)
     private var arcPressCount = 0
@@ -341,22 +344,28 @@ class WhiteBoxViewModel: ViewModel() {
 
     private fun handleTransformStart(offset: Offset) {
         val effectivePoint = offset - canvasOffset.value
-        for(path in paths){
+        val size = paths.size
+        for(index in paths.indices){
+            val path = paths[size - index - 1]
             val found: Boolean = hit(path,effectivePoint)
             if(found){
                 selectPath(path)
-                Log.d("flslfsjfsdfs","touched")
-                return
+            }
+            else{
+                selectPath(null)
             }
         }
     }
 
     private fun hit(path: DrawingPath, effectivePoint: Offset): Boolean {
         return when(path.type){
-            ShapeType.PATH -> TODO()
-            ShapeType.LINE -> hitLine(path,effectivePoint)
+            ShapeType.PATH -> hitPath(effectivePoint,path)
+            ShapeType.LINE -> hitLine(
+                effectivePoint,
+                path.map(path.twoPointData.first),
+                path.map(path.twoPointData.second))
             ShapeType.LINE_SEGMENT -> TODO()
-            ShapeType.RECTANGLE -> TODO()
+            ShapeType.RECTANGLE -> hitRectangle(effectivePoint,path)
             ShapeType.OVAL -> TODO()
             ShapeType.CIRCLE_WITH_CENTER_AND_RADIUS -> TODO()
             ShapeType.CIRCLE_WITH_2_POINT -> TODO()
@@ -365,12 +374,37 @@ class WhiteBoxViewModel: ViewModel() {
         }
     }
 
-    private fun hitLine(path: DrawingPath, effectivePoint: Offset): Boolean {
-        val pointer = effectivePoint
-        val end1 = path.twoPointData.first
-        val end2 = path.twoPointData.second
-        val touchRadius = 20f
-        return isTouching(pointer,end1,end2,touchRadius)
+    private fun hitRectangle(
+        effectivePoint: Offset,
+        path: DrawingPath
+    ): Boolean {
+        val offset = Offset(touchRadius.value,touchRadius.value)
+        val end1 = path.map(path.twoPointData.first)-offset
+        val end2 = path.map(path.twoPointData.second)+offset
+        return effectivePoint.x>=end1.x
+               &&effectivePoint.x<=end2.x
+                &&effectivePoint.y>=end1.y
+                &&effectivePoint.y<=end2.y
+    }
+
+    private fun hitPath(
+        effectivePoint: Offset,
+        path: DrawingPath,
+    ): Boolean {
+        val count = path.points.size
+        for(index in 0..count-2){
+            val end1 = path.map(path.points[index])
+            val end2 = path.map(path.points[index+1])
+            val touching = hitLine(effectivePoint,end1,end2)
+            if(touching){
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun hitLine(effectivePoint: Offset, end1: Offset, end2: Offset): Boolean {
+        return isTouching(effectivePoint, end1, end2, touchRadius.value)
     }
 
     private fun isTouching(pointer: Offset, end1:Offset, end2:Offset, touchRadius: Float):Boolean{
@@ -385,17 +419,17 @@ class WhiteBoxViewModel: ViewModel() {
         return d<=touchRadius && c1<c && c2<c
     }
 
-    private fun selectPath(path: DrawingPath) {
-        selectedPath.value = path.hashCode()
+    private fun selectPath(path: DrawingPath?) {
+        selectedPath.value = if(path==null) 0 else path.hashCode()
         pathUpdated.value = System.currentTimeMillis()
         /////////////////
-        val points = floatArrayOf(0f,0f,100f,100f)
+        /*val points = floatArrayOf(0f,0f,100f,100f)
         val ePoints = FloatArray(4)
         val m = android.graphics.Matrix()
         m.setRotate(90f,50f,50f)
         m.mapPoints(ePoints, points)
         val a = ePoints.size
-        Log.d("fdfdfd",a.toString())
+        Log.d("fdfdfd",a.toString())*/
     }
 
     private fun handleArcWithCenterStart(offset: Offset) {
@@ -669,7 +703,8 @@ class WhiteBoxViewModel: ViewModel() {
             pathEffect = currentPathEffect,
             cap = capType.value,
             drawStyle = getDrawStyle(),
-            drawStyleType = drawStyleType.value
+            drawStyleType = drawStyleType.value,
+            isEraser = true
         )
         eraserPos.value = offset-canvasOffset.value
         path.points.add(offset-canvasOffset.value)
@@ -973,9 +1008,49 @@ class WhiteBoxViewModel: ViewModel() {
         layersWindowOpen.value = false
     }
 
-    fun onPathActiveChanged(item: DrawingPath, active: Boolean) {
-        item.active = active
+    fun togglePathActive(item: DrawingPath) {
+        val index = paths.indexOf(item)
+        item.active = !item.active
+        paths.removeAt(index)
+        paths.add(index,item)
         pathUpdated.value = System.currentTimeMillis()
+    }
+
+    fun onSelectPath(item: DrawingPath, index: Int) {
+        if(selectedPath.value==item.hashCode()){
+            openPathEditor(item,index)
+            return
+        }
+        selectedPath.value = item.hashCode()
+    }
+
+    private fun openPathEditor(path: DrawingPath, index: Int) {
+        editingPath.value = path.clone
+        editingPath.value?.index = index
+    }
+
+    fun onLayerCloseClick() {
+        editingPath.value?.index = -1
+        editingPath.value = null
+    }
+
+    fun layerDeleteCancel() {
+        layerDeleteDialogOpen.value = false
+    }
+
+    fun layerDeleteConfirm() {
+        val index = editingPath.value?.index?:-1
+        if(index > -1){
+            try {
+                paths.removeAt(index)
+            } catch (e: Exception) {
+            }
+        }
+        editingPath.value = null
+    }
+
+    fun deleteLayer() {
+        layerDeleteDialogOpen.value = true
     }
 }
 val hexCodes = listOf(
@@ -1013,5 +1088,3 @@ fun getHexColorValue(alpha: Float,red: Float, green: Float, blue: Float): String
     val halpha = (alpha*255).hex
     return "${halpha}${hred}${hgreen}${hblue}"
 }
-
-

@@ -1,13 +1,11 @@
 package com.vxplore.whitebox
 
+import android.graphics.Paint
 import android.util.Log
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.NativeCanvas
-import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.*
-import androidx.compose.ui.graphics.nativeCanvas
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -16,26 +14,57 @@ fun DrawScope.Drawing(vm: WhiteBoxViewModel) {
     if(vm.pathUpdated.value>0L){
         with(drawContext.canvas.nativeCanvas) {
             val checkPoint = saveLayer(null, null)
-            vm.paths.forEach {
+            vm.paths.forEach { it ->
                 if(!it.active){
                     return@forEach
                 }
-                when(it.type){
-                    ShapeType.PATH -> drawPath(vm,it)
-                    ShapeType.LINE -> drawLine(vm,it)
-                    ShapeType.LINE_SEGMENT -> TODO()
-                    ShapeType.RECTANGLE -> drawRectangle(vm,it)
-                    ShapeType.OVAL -> drawOval(vm,it)
-                    ShapeType.CIRCLE_WITH_CENTER_AND_RADIUS -> drawCircle(vm,it)
-                    ShapeType.CIRCLE_WITH_2_POINT -> drawCircleWith2Point(vm,it)
-                    ShapeType.TEXT -> drawText(vm,it)
-                    ShapeType.ARC -> drawArc(vm,it)
+                withTransform({
+                    it.transformations?.matrix?.let {
+                        transform(it)
+                    }
+                }){
+                    when(it.type){
+                        ShapeType.PATH -> drawPath(vm,it)
+                        ShapeType.LINE -> drawLine(vm,it)
+                        ShapeType.LINE_SEGMENT -> TODO()
+                        ShapeType.RECTANGLE -> drawRectangle(vm,it)
+                        ShapeType.OVAL -> drawOval(vm,it)
+                        ShapeType.CIRCLE_WITH_CENTER_AND_RADIUS -> drawCircle(vm,it)
+                        ShapeType.CIRCLE_WITH_2_POINT -> drawCircleWith2Point(vm,it)
+                        ShapeType.TEXT -> drawText(vm,it)
+                        ShapeType.ARC -> drawArc(vm,it)
+                    }
                 }
             }
-            drawEraser(vm)
+            drawEraserIndicator(vm)
+            //TestDrawing()
             restoreToCount(checkPoint)
         }
     }
+}
+
+fun DrawScope.TestDrawing() {
+    val m = Matrix().apply {
+        translate(300f,300f)
+        rotateZ(145f)
+        translate(-300f,-300f)
+    }
+    withTransform({
+        transform(m)
+    }){
+        drawLine(
+            color = Color.Black,
+            strokeWidth = 5f,
+            start = Offset(200f,200f),
+            end = Offset(400f,400f)
+        )
+    }
+    drawLine(
+        color = Color.Red,
+        strokeWidth = 2f,
+        start = m.map(Offset(200f,200f)),
+        end = m.map(Offset(400f,400f))
+    )
 }
 
 fun DrawScope.drawArc(vm: WhiteBoxViewModel,path: DrawingPath){
@@ -135,6 +164,26 @@ fun DrawScope.drawArc(vm: WhiteBoxViewModel,path: DrawingPath){
                     )
                 }
             }
+            if(vm.selectedPath.value==path.hashCode()){
+                drawArc(
+                    color = Color.Black,
+                    startAngle = angle1,
+                    sweepAngle = intendedSweep(path.sweepShortest,angle2,angle1),
+                    useCenter = path.withCenter,
+                    topLeft = tl+vm.canvasOffset.value,
+                    size = Size(size,size),
+                    style = Stroke(width = 4f)
+                )
+                drawArc(
+                    color = Color.Green,
+                    startAngle = angle1,
+                    sweepAngle = intendedSweep(path.sweepShortest,angle2,angle1),
+                    useCenter = path.withCenter,
+                    topLeft = tl+vm.canvasOffset.value,
+                    size = Size(size,size),
+                    style = Stroke(width = 2f)
+                )
+            }
         }
     }
 }
@@ -183,6 +232,18 @@ fun NativeCanvas.drawText(vm: WhiteBoxViewModel, path: DrawingPath){
     val point = path.points.last()
     val cp = vm.canvasOffset.value
     drawText(path.text?:"",point.x+cp.x,point.y+cp.y,path.paint?:return)
+    if(vm.selectedPath.value==path.hashCode()){
+        drawText(path.text?:"",point.x+cp.x,point.y+cp.y,Paint(path.paint).apply {
+            strokeWidth = 4f
+            style = Paint.Style.STROKE
+            color = android.graphics.Color.BLACK
+        })
+        drawText(path.text?:"",point.x+cp.x,point.y+cp.y,Paint(path.paint).apply {
+            strokeWidth = 2f
+            style = Paint.Style.STROKE
+            color = android.graphics.Color.GREEN
+        })
+    }
 }
 
 fun DrawScope.drawCircleWith2Point(vm: WhiteBoxViewModel, path: DrawingPath) {
@@ -234,6 +295,24 @@ fun DrawScope.drawCircleWith2Point(vm: WhiteBoxViewModel, path: DrawingPath) {
             )
         }
     }
+    if(vm.selectedPath.value==path.hashCode()){
+        drawCircle(
+            color = Color.Black,
+            center = mid+vm.canvasOffset.value,
+            radius = distance(mid,path.twoPointData.second),
+            style = Stroke(
+                width = 4f
+            )
+        )
+        drawCircle(
+            color = Color.Green,
+            center = mid+vm.canvasOffset.value,
+            radius = distance(mid,path.twoPointData.second),
+            style = Stroke(
+                width = 2f
+            )
+        )
+    }
 }
 
 fun DrawScope.drawCircle(vm: WhiteBoxViewModel, path: DrawingPath) {
@@ -280,6 +359,24 @@ fun DrawScope.drawCircle(vm: WhiteBoxViewModel, path: DrawingPath) {
                 style = path.drawStyle?:Fill
             )
         }
+    }
+    if(vm.selectedPath.value==path.hashCode()){
+        drawCircle(
+            color = Color.Black,
+            center = path.twoPointData.first+vm.canvasOffset.value,
+            radius = distance(path.twoPointData.first,path.twoPointData.second),
+            style = Stroke(
+                width = 4f
+            )
+        )
+        drawCircle(
+            color = Color.Green,
+            center = path.twoPointData.first+vm.canvasOffset.value,
+            radius = distance(path.twoPointData.first,path.twoPointData.second),
+            style = Stroke(
+                width = 2f
+            )
+        )
     }
 }
 
@@ -329,13 +426,31 @@ fun DrawScope.drawOval(vm: WhiteBoxViewModel, path: DrawingPath) {
             )
         }
     }
+    if(vm.selectedPath.value==path.hashCode()){
+        drawOval(
+            color = Color.Black,
+            topLeft = path.twoPointData.first+vm.canvasOffset.value,
+            size = Size(gap.x,gap.y),
+            style = Stroke(
+                width = 4f
+            )
+        )
+        drawOval(
+            color = Color.Green,
+            topLeft = path.twoPointData.first+vm.canvasOffset.value,
+            size = Size(gap.x,gap.y),
+            style = Stroke(
+                width = 2f
+            )
+        )
+    }
 }
 
 fun applyEraser(vm: WhiteBoxViewModel, it: DrawingPath) {
 
 }
 
-fun DrawScope.drawEraser(vm: WhiteBoxViewModel) {
+fun DrawScope.drawEraserIndicator(vm: WhiteBoxViewModel) {
     if(vm.showEraser.value){
         drawCircle(
             color = vm.eraserIndicatorColor.value,
@@ -394,6 +509,24 @@ fun DrawScope.drawRectangle(vm: WhiteBoxViewModel, path: DrawingPath) {
                 style = path.drawStyle?:Fill
             )
         }
+    }
+    if(vm.selectedPath.value==path.hashCode()){
+        drawRect(
+            color = Color.Black,
+            topLeft = path.twoPointData.first+vm.canvasOffset.value,
+            size = Size(gap.x,gap.y),
+            style = Stroke(
+                width = 4f
+            )
+        )
+        drawRect(
+            color = Color.Green,
+            topLeft = path.twoPointData.first+vm.canvasOffset.value,
+            size = Size(gap.x,gap.y),
+            style = Stroke(
+                width = 2f
+            )
+        )
     }
 }
 
@@ -467,6 +600,22 @@ fun DrawScope.drawPath(vm: WhiteBoxViewModel, path: DrawingPath) {
             )
         }
     }
+    if(vm.selectedPath.value==path.hashCode()/*&&!path.isEraser*/){
+        drawPath(
+            createNewPath(vm,path),
+            color = Color.Black,
+            style = Stroke(
+                width = 4f
+            )
+        )
+        drawPath(
+            createNewPath(vm,path),
+            color = Color.Green,
+            style = Stroke(
+                width = 2f
+            )
+        )
+    }
     drawArrow(path,vm)
 }
 
@@ -491,6 +640,21 @@ fun DrawScope.drawArrow(path: DrawingPath,vm: WhiteBoxViewModel) {
                     cap = path.cap.strokeType,
                     pathEffect = path.pathEffect,
                 )
+
+                if(path.hashCode()==vm.selectedPath.value){
+                    drawLine(
+                        start = it.center,
+                        end = it.target,
+                        color = Color.Black,
+                        strokeWidth = 4f,
+                    )
+                    drawLine(
+                        start = it.center,
+                        end = it.target,
+                        color = Color.Green,
+                        strokeWidth = 2f,
+                    )
+                }
             }
             rotate(
                 -45f,
@@ -507,6 +671,20 @@ fun DrawScope.drawArrow(path: DrawingPath,vm: WhiteBoxViewModel) {
                     cap = path.cap.strokeType,
                     pathEffect = path.pathEffect,
                 )
+                if(path.hashCode()==vm.selectedPath.value){
+                    drawLine(
+                        start = it.center,
+                        end = it.target,
+                        color = Color.Black,
+                        strokeWidth = 4f,
+                    )
+                    drawLine(
+                        start = it.center,
+                        end = it.target,
+                        color = Color.Green,
+                        strokeWidth = 2f,
+                    )
+                }
             }
         }
     }
@@ -530,6 +708,20 @@ fun DrawScope.drawArrow(path: DrawingPath,vm: WhiteBoxViewModel) {
                     cap = path.cap.strokeType,
                     pathEffect = path.pathEffect,
                 )
+                if(path.hashCode()==vm.selectedPath.value){
+                    drawLine(
+                        start = it.center,
+                        end = it.target,
+                        color = Color.Black,
+                        strokeWidth = 4f,
+                    )
+                    drawLine(
+                        start = it.center,
+                        end = it.target,
+                        color = Color.Green,
+                        strokeWidth = 2f,
+                    )
+                }
             }
             rotate(
                 -45f,
@@ -546,6 +738,20 @@ fun DrawScope.drawArrow(path: DrawingPath,vm: WhiteBoxViewModel) {
                     cap = path.cap.strokeType,
                     pathEffect = path.pathEffect,
                 )
+                if(path.hashCode()==vm.selectedPath.value){
+                    drawLine(
+                        start = it.center,
+                        end = it.target,
+                        color = Color.Black,
+                        strokeWidth = 4f,
+                    )
+                    drawLine(
+                        start = it.center,
+                        end = it.target,
+                        color = Color.Green,
+                        strokeWidth = 2f,
+                    )
+                }
             }
         }
     }
