@@ -345,16 +345,16 @@ class WhiteBoxViewModel: ViewModel() {
     private fun handleTransformStart(offset: Offset) {
         val effectivePoint = offset - canvasOffset.value
         val size = paths.size
+        var finalPath:DrawingPath? = null
         for(index in paths.indices){
             val path = paths[size - index - 1]
-            val found: Boolean = hit(path,effectivePoint)
+            val found: Boolean = hit(path,path.inverseMap(effectivePoint))
             if(found){
-                selectPath(path)
-            }
-            else{
-                selectPath(null)
+                finalPath = path
+                break
             }
         }
+        selectPath(finalPath)
     }
 
     private fun hit(path: DrawingPath, effectivePoint: Offset): Boolean {
@@ -362,8 +362,8 @@ class WhiteBoxViewModel: ViewModel() {
             ShapeType.PATH -> hitPath(effectivePoint,path)
             ShapeType.LINE -> hitLine(
                 effectivePoint,
-                path.map(path.twoPointData.first),
-                path.map(path.twoPointData.second))
+                path.twoPointData.first,
+                path.twoPointData.second)
             ShapeType.LINE_SEGMENT -> TODO()
             ShapeType.RECTANGLE -> hitRectangle(effectivePoint,path)
             ShapeType.OVAL -> TODO()
@@ -379,8 +379,8 @@ class WhiteBoxViewModel: ViewModel() {
         path: DrawingPath
     ): Boolean {
         val offset = Offset(touchRadius.value,touchRadius.value)
-        val end1 = path.map(path.twoPointData.first)-offset
-        val end2 = path.map(path.twoPointData.second)+offset
+        val end1 = path.twoPointData.first-offset
+        val end2 = path.twoPointData.second+offset
         return effectivePoint.x>=end1.x
                &&effectivePoint.x<=end2.x
                 &&effectivePoint.y>=end1.y
@@ -393,8 +393,8 @@ class WhiteBoxViewModel: ViewModel() {
     ): Boolean {
         val count = path.points.size
         for(index in 0..count-2){
-            val end1 = path.map(path.points[index])
-            val end2 = path.map(path.points[index+1])
+            val end1 = path.points[index]
+            val end2 = path.points[index+1]
             val touching = hitLine(effectivePoint,end1,end2)
             if(touching){
                 return true

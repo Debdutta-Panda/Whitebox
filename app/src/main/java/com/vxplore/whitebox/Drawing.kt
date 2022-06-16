@@ -19,7 +19,7 @@ fun DrawScope.Drawing(vm: WhiteBoxViewModel) {
                     return@forEach
                 }
                 withTransform({
-                    it.transformations?.matrix?.let {
+                    it.myMatrix?.let {
                         transform(it)
                     }
                 }){

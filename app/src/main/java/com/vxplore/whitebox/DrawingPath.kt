@@ -2,10 +2,7 @@ package com.vxplore.whitebox
 
 import android.graphics.Paint
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.DrawStyle
 
@@ -50,10 +47,24 @@ data class DrawingPath(
     var active: Boolean = true,
     var isEraser:Boolean = false,
     var index: Int = -1,
-    val transformations: MutableList<Transform>? = null
+
 ) {
+
+    private var transformations: MutableList<Transform>? = null
+    private var matrix: Matrix? = null
+    private var inverseMatrix: Matrix? = null
+
+    val myMatrix: Matrix?
+    get(){
+        return matrix
+    }
+
     fun map(offset: Offset): Offset {
         return offset
+    }
+
+    fun inverseMap(offset: Offset): Offset {
+        return inverseMatrix?.map(offset)?:offset
     }
 
     val bestColor: Color
