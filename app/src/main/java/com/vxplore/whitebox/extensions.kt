@@ -77,3 +77,17 @@ fun createImageVector(path: String, width: Int,height: Int, vWidth: Float,vHeigh
 }
 
 val Color.Companion.lightRed: Color get() = Color(0xffe64949)
+
+
+fun intendedSweep(shortest: Boolean, angle2: Float, angle1: Float): Float {
+    val s = shortestSweep(angle2,angle1)
+    return if(shortest){
+        s
+    }
+    else{
+        when (s) {
+            in 0f..180f -> s-360
+            else -> s+360
+        }
+    }
+}

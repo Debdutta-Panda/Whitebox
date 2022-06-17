@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.core.math.MathUtils.clamp
 import androidx.lifecycle.ViewModel
+import kotlin.math.abs
 import kotlin.math.sqrt
 
 val StrokeJoinType.stokeJoin: StrokeJoin
@@ -364,14 +365,107 @@ class WhiteBoxViewModel: ViewModel() {
                 effectivePoint,
                 path.twoPointData.first,
                 path.twoPointData.second)
-            ShapeType.LINE_SEGMENT -> TODO()
+            ShapeType.LINE_SEGMENT -> false
             ShapeType.RECTANGLE -> hitRectangle(effectivePoint,path)
-            ShapeType.OVAL -> TODO()
-            ShapeType.CIRCLE_WITH_CENTER_AND_RADIUS -> TODO()
-            ShapeType.CIRCLE_WITH_2_POINT -> TODO()
-            ShapeType.TEXT -> TODO()
-            ShapeType.ARC -> TODO()
+            ShapeType.OVAL -> hitOval(effectivePoint,path)
+            ShapeType.CIRCLE_WITH_CENTER_AND_RADIUS -> false
+            ShapeType.CIRCLE_WITH_2_POINT -> false
+            ShapeType.TEXT -> false
+            ShapeType.ARC -> hitArc(effectivePoint,path)
         }
+    }
+
+    private fun hitArc(effectivePoint: Offset, path: DrawingPath): Boolean {
+        val c = path.points.first()
+        val start = path.points[1]
+        val r = distance(c,start)
+        val r1 = r - touchRadius.value
+        val end = onDistance(path.points.last(),c,r)
+        val AB = distance(start,end)
+        val AP = distance(start,effectivePoint)
+        val BP = distance(end,effectivePoint)
+        val r2 = r + touchRadius.value
+        val x = effectivePoint.x - c.x
+        val y = effectivePoint.y - c.y
+        val eq1 = x.square()+y.square()-r1.square()
+        val eq2 = x.square()+y.square()-r2.square()
+        val angle1 = start.angle(c)
+        val angle2 = end.angle(c)
+        val angle = effectivePoint.angle(c)
+
+        val sweepEnd = intendedSweep(path.sweepShortest,angle2,angle1)
+        val sweepMid = intendedSweep(path.sweepShortest,angle,angle1)
+
+        Log.d("arc_touch_cal","start=$angle1,angle=$angle,end=$angle2")
+        return /*eq1>=0&&*/eq2<=0&&sweepMid>=angle1&&sweepMid<=sweepEnd/*&&AP<=AB&&BP<=AB&&AP<=r&&BP<=r*/
+        if(path.withCenter){
+            val c = path.points.first()
+            val start = path.points[1]
+            val r = distance(c,start)
+            val r1 = r - touchRadius.value
+            val end = onDistance(path.points.last(),c,r)
+            val AB = distance(start,end)
+            val AP = distance(start,effectivePoint)
+            val BP = distance(end,effectivePoint)
+            val r2 = r + touchRadius.value
+            val x = effectivePoint.x - c.x
+            val y = effectivePoint.y - c.y
+            val eq1 = x.square()+y.square()-r1.square()
+            val eq2 = x.square()+y.square()-r2.square()
+            val angle1 = start.angle(c)
+            val angle2 = end.angle(c)
+            val angle = effectivePoint.angle(c)
+
+            val sweepEnd = intendedSweep(path.sweepShortest,angle2,angle1)
+            val sweepMid = intendedSweep(path.sweepShortest,angle,angle1)
+
+            Log.d("arc_touch_cal","start=$angle1,angle=$angle,end=$angle2")
+            return /*eq1>=0&&*/eq2<=0&&sweepMid>=angle1&&sweepMid<=sweepEnd/*&&AP<=AB&&BP<=AB&&AP<=r&&BP<=r*/
+        }
+        else{
+            val c = path.points.first()
+            val start = path.points[1]
+            val r = distance(c,start)
+            val r1 = r - touchRadius.value
+            val end = onDistance(path.points.last(),c,r)
+            val AB = distance(start,end)
+            val AP = distance(start,effectivePoint)
+            val BP = distance(end,effectivePoint)
+            val r2 = r + touchRadius.value
+            val x = effectivePoint.x - c.x
+            val y = effectivePoint.y - c.y
+            val eq1 = x.square()+y.square()-r1.square()
+            val eq2 = x.square()+y.square()-r2.square()
+            return eq1>=0&&eq2<=0&&AP<=AB&&BP<=AB
+        }
+    }
+
+    private fun onDistance(original: Offset, start: Offset, distance: Float): Offset {
+        val m = distance
+        val n = distance(original,start) - distance
+        if(m+n==0f){
+            return original
+        }
+        return (original*m + start*n)/(m+n)
+    }
+
+    private fun hitOval(effectivePoint: Offset, path: DrawingPath): Boolean {
+        val extra = Offset(touchRadius.value,touchRadius.value)
+        val tl = path.twoPointData.first-extra
+        val br = path.twoPointData.second+extra
+        val s = br - tl
+        val c = (br+tl)/2f
+        val w = abs(s.x)
+        val h = abs(s.y)
+        val a = w/2f
+        val b = h/2f
+        val x = effectivePoint.x - c.x
+        val y = effectivePoint.y - c.y
+        val aSquare = a.square()
+        val bSquare = b.square()
+        val left = x.square()*bSquare+y.square()*aSquare
+        val right = aSquare*bSquare
+        return left<=right
     }
 
     private fun hitRectangle(

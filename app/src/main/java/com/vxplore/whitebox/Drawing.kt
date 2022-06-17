@@ -108,12 +108,16 @@ fun DrawScope.drawArc(vm: WhiteBoxViewModel,path: DrawingPath){
 
             val angle1 = B.angle(A)
             val angle2 = C.angle(A)
+            val startAngle = angle1
+            val sweepAngle = intendedSweep(path.sweepShortest,angle2,angle1)
+            val endAngle = startAngle + sweepAngle
+            Log.d("arc_touch_draw","start=$startAngle,sweep=$sweepAngle,end=$endAngle")
             when(path.drawStyleType){
                 DrawStyleType.STROKE -> {
                     drawArc(
                         color = path.strokeColor,
-                        startAngle = angle1,
-                        sweepAngle = intendedSweep(path.sweepShortest,angle2,angle1),
+                        startAngle = startAngle,
+                        sweepAngle = sweepAngle,
                         useCenter = path.withCenter,
                         topLeft = tl+vm.canvasOffset.value,
                         size = Size(size,size),
@@ -126,8 +130,8 @@ fun DrawScope.drawArc(vm: WhiteBoxViewModel,path: DrawingPath){
                 DrawStyleType.FILL -> {
                     drawArc(
                         color = path.fillColor,
-                        startAngle = angle1,
-                        sweepAngle = intendedSweep(path.sweepShortest,angle2,angle1),
+                        startAngle = startAngle,
+                        sweepAngle = sweepAngle,
                         useCenter = path.withCenter,
                         topLeft = tl+vm.canvasOffset.value,
                         size = Size(size,size),
@@ -140,8 +144,8 @@ fun DrawScope.drawArc(vm: WhiteBoxViewModel,path: DrawingPath){
                 DrawStyleType.BOTH -> {
                     drawArc(
                         color = path.fillColor,
-                        startAngle = angle1,
-                        sweepAngle = intendedSweep(path.sweepShortest,angle2,angle1),
+                        startAngle = startAngle,
+                        sweepAngle = sweepAngle,
                         useCenter = path.withCenter,
                         topLeft = tl+vm.canvasOffset.value,
                         size = Size(size,size),
@@ -152,8 +156,8 @@ fun DrawScope.drawArc(vm: WhiteBoxViewModel,path: DrawingPath){
                     )
                     drawArc(
                         color = path.strokeColor,
-                        startAngle = angle1,
-                        sweepAngle = intendedSweep(path.sweepShortest,angle2,angle1),
+                        startAngle = startAngle,
+                        sweepAngle = sweepAngle,
                         useCenter = path.withCenter,
                         topLeft = tl+vm.canvasOffset.value,
                         size = Size(size,size),
@@ -167,8 +171,8 @@ fun DrawScope.drawArc(vm: WhiteBoxViewModel,path: DrawingPath){
             if(vm.selectedPath.value==path.hashCode()){
                 drawArc(
                     color = Color.Black,
-                    startAngle = angle1,
-                    sweepAngle = intendedSweep(path.sweepShortest,angle2,angle1),
+                    startAngle = startAngle,
+                    sweepAngle = sweepAngle,
                     useCenter = path.withCenter,
                     topLeft = tl+vm.canvasOffset.value,
                     size = Size(size,size),
@@ -176,27 +180,14 @@ fun DrawScope.drawArc(vm: WhiteBoxViewModel,path: DrawingPath){
                 )
                 drawArc(
                     color = Color.Green,
-                    startAngle = angle1,
-                    sweepAngle = intendedSweep(path.sweepShortest,angle2,angle1),
+                    startAngle = startAngle,
+                    sweepAngle = sweepAngle,
                     useCenter = path.withCenter,
                     topLeft = tl+vm.canvasOffset.value,
                     size = Size(size,size),
                     style = Stroke(width = 2f)
                 )
             }
-        }
-    }
-}
-
-fun intendedSweep(shortest: Boolean, angle2: Float, angle1: Float): Float {
-    val s = shortestSweep(angle2,angle1)
-    return if(shortest){
-        s
-    }
-    else{
-        when (s) {
-            in 0f..180f -> s-360
-            else -> s+360
         }
     }
 }
