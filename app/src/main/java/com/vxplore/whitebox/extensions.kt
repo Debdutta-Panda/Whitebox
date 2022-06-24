@@ -39,7 +39,7 @@ val CapType.strokeType: StrokeCap
         }
     }
 
-fun Offset.angle(center: Offset):Float{
+fun Offset.angle(center: Offset,makePositive: Boolean = false):Float{
     val A = center
     val B = this
     val dx = B.x-A.x
@@ -48,15 +48,20 @@ fun Offset.angle(center: Offset):Float{
     val angle = atan(tan)
     val caseH = if(dy<0) 1 else 0
     val caseV = if(dx<0) 2 else 0
-    val case = caseH + caseV
-    val correction = when(case){
+    val correction = when(caseH + caseV){
         0->0
         1->0
         2->180
         3->180
         else->0
     }
-    return (angle*180/PI).toFloat() + correction
+    val r = (angle*180/PI).toFloat() + correction
+    return if(makePositive){
+        if(r>=0f) r else 360f + r
+    }
+    else{
+        r
+    }
 }
 
 fun createImageVector(path: String, width: Int,height: Int, vWidth: Float,vHeight:Float): ImageVector {

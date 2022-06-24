@@ -71,9 +71,6 @@ fun DrawScope.drawArc(vm: WhiteBoxViewModel,path: DrawingPath){
     val points = path.points
     val count = points.size
 
-
-
-
     when(count){
         1->{
             drawCircle(
@@ -606,6 +603,16 @@ fun DrawScope.drawPath(vm: WhiteBoxViewModel, path: DrawingPath) {
                 width = 2f
             )
         )
+        path.points.forEach {
+            drawCircle(
+                color = Color.Red,
+                radius = vm.stroke.value,
+                center = it+vm.canvasOffset.value,
+                style = Stroke(
+                    width = 4f
+                )
+            )
+        }
     }
     drawArrow(path,vm)
 }

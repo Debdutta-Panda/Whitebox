@@ -1,6 +1,7 @@
 package com.vxplore.whitebox
 
 import android.graphics.Paint
+import android.graphics.Rect
 import android.util.Log
 import android.view.KeyEvent
 import androidx.compose.runtime.mutableStateListOf
@@ -15,6 +16,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.core.math.MathUtils.clamp
 import androidx.lifecycle.ViewModel
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sqrt
 
 val StrokeJoinType.stokeJoin: StrokeJoin
@@ -368,75 +371,64 @@ class WhiteBoxViewModel: ViewModel() {
             ShapeType.LINE_SEGMENT -> false
             ShapeType.RECTANGLE -> hitRectangle(effectivePoint,path)
             ShapeType.OVAL -> hitOval(effectivePoint,path)
-            ShapeType.CIRCLE_WITH_CENTER_AND_RADIUS -> false
-            ShapeType.CIRCLE_WITH_2_POINT -> false
-            ShapeType.TEXT -> false
+            ShapeType.CIRCLE_WITH_CENTER_AND_RADIUS -> hitCircle(effectivePoint,path)
+            ShapeType.CIRCLE_WITH_2_POINT -> hitCircleWith2Point(effectivePoint,path)
+            ShapeType.TEXT -> hitText(effectivePoint,path)
             ShapeType.ARC -> hitArc(effectivePoint,path)
         }
+    }
+
+    private fun hitText(ep: Offset, path: DrawingPath): Boolean {
+        val bounds = Rect()
+        path.paint?.getTextBounds(path.text, 0, path.text?.length?:0, bounds)
+
+        val h = bounds.height()
+        val w = bounds.width()
+
+        val p = path.points.last()
+        val point = p - Offset(0f,h.toFloat())
+
+        return ep.x>=point.x-touchRadius.value&&ep.x<=point.x+w+touchRadius.value&&ep.y>=point.y-touchRadius.value&&ep.y<=point.y+h+touchRadius.value
+    }
+
+    private fun hitCircleWith2Point(effectivePoint: Offset, path: DrawingPath): Boolean {
+        val f = path.twoPointData.first
+        val s = path.twoPointData.second
+        val c = (f + s)/2f
+        val r = distance(c,f)
+        val d = distance(c,effectivePoint)
+        return d<=r+touchRadius.value
+    }
+
+    private fun hitCircle(effectivePoint: Offset, path: DrawingPath): Boolean {
+        val center = path.twoPointData.first
+        val point = path.twoPointData.second
+        val radius = distance(center,point)
+        val distance = distance(center,effectivePoint)
+        return distance<=radius+touchRadius.value
     }
 
     private fun hitArc(effectivePoint: Offset, path: DrawingPath): Boolean {
         val c = path.points.first()
         val start = path.points[1]
         val r = distance(c,start)
-        val r1 = r - touchRadius.value
         val end = onDistance(path.points.last(),c,r)
-        val AB = distance(start,end)
-        val AP = distance(start,effectivePoint)
-        val BP = distance(end,effectivePoint)
-        val r2 = r + touchRadius.value
-        val x = effectivePoint.x - c.x
-        val y = effectivePoint.y - c.y
-        val eq1 = x.square()+y.square()-r1.square()
-        val eq2 = x.square()+y.square()-r2.square()
         val angle1 = start.angle(c)
         val angle2 = end.angle(c)
         val angle = effectivePoint.angle(c)
-
-        val sweepEnd = intendedSweep(path.sweepShortest,angle2,angle1)
-        val sweepMid = intendedSweep(path.sweepShortest,angle,angle1)
-
-        Log.d("arc_touch_cal","start=$angle1,angle=$angle,end=$angle2")
-        return /*eq1>=0&&*/eq2<=0&&sweepMid>=angle1&&sweepMid<=sweepEnd/*&&AP<=AB&&BP<=AB&&AP<=r&&BP<=r*/
-        if(path.withCenter){
-            val c = path.points.first()
-            val start = path.points[1]
-            val r = distance(c,start)
-            val r1 = r - touchRadius.value
-            val end = onDistance(path.points.last(),c,r)
-            val AB = distance(start,end)
-            val AP = distance(start,effectivePoint)
-            val BP = distance(end,effectivePoint)
-            val r2 = r + touchRadius.value
-            val x = effectivePoint.x - c.x
-            val y = effectivePoint.y - c.y
-            val eq1 = x.square()+y.square()-r1.square()
-            val eq2 = x.square()+y.square()-r2.square()
-            val angle1 = start.angle(c)
-            val angle2 = end.angle(c)
-            val angle = effectivePoint.angle(c)
-
-            val sweepEnd = intendedSweep(path.sweepShortest,angle2,angle1)
-            val sweepMid = intendedSweep(path.sweepShortest,angle,angle1)
-
-            Log.d("arc_touch_cal","start=$angle1,angle=$angle,end=$angle2")
-            return /*eq1>=0&&*/eq2<=0&&sweepMid>=angle1&&sweepMid<=sweepEnd/*&&AP<=AB&&BP<=AB&&AP<=r&&BP<=r*/
+        val d = distance(effectivePoint,c)
+        val insideShortest = angle.inside(angle1,angle2)
+        if(path.sweepShortest){
+            if(path.withCenter){
+                return d<=r && insideShortest
+            }
+            return (d in (r-touchRadius.value)..(r+touchRadius.value)) && insideShortest
         }
         else{
-            val c = path.points.first()
-            val start = path.points[1]
-            val r = distance(c,start)
-            val r1 = r - touchRadius.value
-            val end = onDistance(path.points.last(),c,r)
-            val AB = distance(start,end)
-            val AP = distance(start,effectivePoint)
-            val BP = distance(end,effectivePoint)
-            val r2 = r + touchRadius.value
-            val x = effectivePoint.x - c.x
-            val y = effectivePoint.y - c.y
-            val eq1 = x.square()+y.square()-r1.square()
-            val eq2 = x.square()+y.square()-r2.square()
-            return eq1>=0&&eq2<=0&&AP<=AB&&BP<=AB
+            if(path.withCenter){
+                return d<=r && !insideShortest
+            }
+            return (d in (r-touchRadius.value)..(r+touchRadius.value)) && !insideShortest
         }
     }
 
@@ -1147,6 +1139,20 @@ class WhiteBoxViewModel: ViewModel() {
         layerDeleteDialogOpen.value = true
     }
 }
+
+private fun Float.inside(angle1: Float, angle2: Float): Boolean {
+    val min = min(angle1,angle2)
+    val max = max(angle1,angle2)
+    val inside = this in min..max
+
+    val a1 = if(angle1>=0f) angle1 else 360f + angle1
+    val a2 = if(angle2>=0f) angle2 else 360f + angle2
+    val a = if(this>=0f) this else 360f + this
+
+    val inside1 = a in a1..a2
+    return inside||inside1
+}
+
 val hexCodes = listOf(
     '0',
     '1',
