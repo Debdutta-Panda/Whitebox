@@ -33,6 +33,11 @@
             <set />
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/../JetpackComposeCanvasInDetail/app/src/main/java/com/debduttapanda/jetpackcomposecanvasindetail/MainActivity.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/app/src/main/java/com/vxplore/whitebox/BottomSheetContent.kt">
           <value>
             <set />
@@ -129,6 +134,11 @@
           </value>
         </entry>
         <entry key="$PROJECT_DIR$/app/src/main/java/com/vxplore/whitebox/MainScreenContent.kt">
+          <value>
+            <set />
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/vxplore/whitebox/PointerSubTool.kt">
           <value>
             <set />
           </value>

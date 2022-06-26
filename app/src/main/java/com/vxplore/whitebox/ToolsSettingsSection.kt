@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -96,15 +97,37 @@ fun ColumnScope.ToolsSettingsSection(vm: WhiteBoxViewModel) {
                 .weight(1f)
                 .fillMaxSize()
         ){
-            IconButton(onClick = {
-                vm.switchLineType()
-            }) {
-                Icon(
-                    imageVector = getLineTypeIcon(vm),
-                    contentDescription = "Line Type ${vm.lineType.value.name}",
-                    tint = Color(Constants.selectedToolColor),
-                    modifier = Modifier.size(Constants.toolIconSize.dp)
-                )
+            item{
+                IconButton(onClick = {
+                    vm.switchPointerSubTool(PointerSubTool.SELECT)
+                }) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_pointer_select),
+                        contentDescription = "Selection tool",
+                        modifier = Modifier.size(Constants.toolIconSize.dp),
+                        colorFilter =
+                        if(vm.pointerSubTool.value!=PointerSubTool.SELECT)
+                            ColorFilter.tint(vm.toolColor.value)
+                        else
+                            null
+                    )
+                }
+            }
+            item{
+                IconButton(onClick = {
+                    vm.switchPointerSubTool(PointerSubTool.EDIT)
+                }) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_pointer_edit),
+                        contentDescription = "Edit tool",
+                        modifier = Modifier.size(Constants.toolIconSize.dp),
+                        colorFilter =
+                        if(vm.pointerSubTool.value!=PointerSubTool.EDIT)
+                            ColorFilter.tint(vm.toolColor.value)
+                        else
+                            null
+                    )
+                }
             }
         }
     }

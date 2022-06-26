@@ -30,6 +30,9 @@ val StrokeJoinType.stokeJoin: StrokeJoin
     }
 
 class WhiteBoxViewModel: ViewModel() {
+    var dragging = false
+    val selectedPoint = mutableStateOf(0)
+    val pointerSubTool = mutableStateOf(PointerSubTool.SELECT)
     private val touchRadius = mutableStateOf(20f)
     val layerDeleteDialogOpen = mutableStateOf(false)
     val editingPath = mutableStateOf<DrawingPath?>(null)
@@ -117,8 +120,25 @@ class WhiteBoxViewModel: ViewModel() {
                 Tool.CIRCLE_WITH_CENTER_AND_RADIUS -> handleDragCircle(dragAmount)
                 Tool.CIRCLE_WITH_TWO_POINTS -> handleDragCircle2Point(dragAmount)
                 Tool.PEN -> handlePenDrag(offset)
+                Tool.TRANSFORM -> handlePointerDrag(offset)
+                //Tool.TEXT -> TODO()
+                //Tool.ARC -> TODO()
+                //Tool.ARC_WITH_CENTER -> TODO()
+                //Tool.DOT -> TODO()
             }
         } catch (e: Exception) {
+        }
+    }
+
+
+    private fun handlePointerDrag(offset: Offset) {
+        Log.d("ldjfldfjld","${selectedPath.value}")
+        if(pointerSubTool.value==PointerSubTool.EDIT){
+            currentPath?.let {
+                it.points.removeAt(selectedPoint.value)
+                it.points.add(selectedPoint.value,offset)
+                pathUpdated.value = System.currentTimeMillis()
+            }
         }
     }
 
@@ -322,8 +342,12 @@ class WhiteBoxViewModel: ViewModel() {
     private fun onPenToolSelected() {
         penPathAdded.value = false
     }
-
+    var currentPath:DrawingPath? = null
     fun dragStart(offset: Offset) {
+        dragging = true
+        currentPath = paths.find {
+            it.hashCode() == selectedPath.value
+        }
         when(tool.value){
             Tool.MOVE -> handleMoveDragStart(offset)
             Tool.FREE_HAND -> handleFreeHandDragStart(offset)
@@ -342,23 +366,39 @@ class WhiteBoxViewModel: ViewModel() {
             Tool.TEXT -> handleTextStart(offset)
             Tool.ARC -> handleArcStart(offset)
             Tool.ARC_WITH_CENTER -> handleArcWithCenterStart(offset)
-            Tool.TRANSFORM -> handleTransformStart(offset)
+            Tool.TRANSFORM -> handlePointerStart(offset)
         }
     }
 
-    private fun handleTransformStart(offset: Offset) {
+    private fun handlePointerStart(offset: Offset) {
         val effectivePoint = offset - canvasOffset.value
-        val size = paths.size
-        var finalPath:DrawingPath? = null
-        for(index in paths.indices){
-            val path = paths[size - index - 1]
-            val found: Boolean = hit(path,path.inverseMap(effectivePoint))
-            if(found){
-                finalPath = path
-                break
+        if(pointerSubTool.value==PointerSubTool.SELECT){
+            val size = paths.size
+            var finalPath:DrawingPath? = null
+            for(index in paths.indices){
+                val path = paths[size - index - 1]
+                val found: Boolean = hit(path,path.inverseMap(effectivePoint))
+                if(found){
+                    finalPath = path
+                    break
+                }
+            }
+            selectPath(finalPath)
+        }
+        else{
+            val path = paths.find {
+                it.hashCode()==selectedPath.value
+            }
+            path?.let {
+                for(index in path.points.indices){
+                    val d = distance(effectivePoint,path.points[index])
+                    if(d<=stroke.value){
+                        selectedPoint.value = index
+                        break
+                    }
+                }
             }
         }
-        selectPath(finalPath)
     }
 
     private fun hit(path: DrawingPath, effectivePoint: Offset): Boolean {
@@ -821,6 +861,7 @@ class WhiteBoxViewModel: ViewModel() {
 
     fun dragEnd() {
         showEraser.value = false
+        dragging = false
     }
 
     fun dragCancel() {
@@ -1137,6 +1178,10 @@ class WhiteBoxViewModel: ViewModel() {
 
     fun deleteLayer() {
         layerDeleteDialogOpen.value = true
+    }
+
+    fun switchPointerSubTool(tool: PointerSubTool) {
+        pointerSubTool.value = tool
     }
 }
 

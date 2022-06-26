@@ -588,6 +588,7 @@ fun DrawScope.drawPath(vm: WhiteBoxViewModel, path: DrawingPath) {
             )
         }
     }
+    Log.d("ldjfldfjld_1","${path.hashCode()}")
     if(vm.selectedPath.value==path.hashCode()/*&&!path.isEraser*/){
         drawPath(
             createNewPath(vm,path),
@@ -603,7 +604,28 @@ fun DrawScope.drawPath(vm: WhiteBoxViewModel, path: DrawingPath) {
                 width = 2f
             )
         )
-        path.points.forEach {
+
+        if(vm.pointerSubTool.value==PointerSubTool.EDIT){
+            drawPoints(
+                points = path.points,
+                pointMode = PointMode.Points,
+                color = Color.Red,
+                strokeWidth = vm.stroke.value,
+                cap = StrokeCap.Round
+            )
+        }
+        if(vm.selectedPoint.value!=-1){
+            val selectedPoint = path.points[vm.selectedPoint.value]
+            drawCircle(
+                color = Color.Green,
+                radius = vm.stroke.value/2f,
+                center = selectedPoint+vm.canvasOffset.value,
+                style = Stroke(
+                    width = 3f
+                )
+            )
+        }
+        /*path.points.forEach {
             drawCircle(
                 color = Color.Red,
                 radius = vm.stroke.value,
@@ -612,7 +634,7 @@ fun DrawScope.drawPath(vm: WhiteBoxViewModel, path: DrawingPath) {
                     width = 4f
                 )
             )
-        }
+        }*/
     }
     drawArrow(path,vm)
 }

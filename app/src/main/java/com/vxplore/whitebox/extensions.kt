@@ -96,3 +96,12 @@ fun intendedSweep(shortest: Boolean, angle2: Float, angle1: Float): Float {
         }
     }
 }
+
+fun <T>MutableList<T>.replace(item: T,block:(T)->T){
+    val index = this.indexOf(item)
+    if(index > -1){
+        val result = block(item)
+        this.removeAt(index)
+        this.add(index,result)
+    }
+}
